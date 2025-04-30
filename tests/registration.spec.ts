@@ -1,6 +1,4 @@
-import { test as base, expect } from '@playwright/test';
-import { RegisterPage } from '../src/pages/RegisterPage';
-import { HomePage } from '../src/pages/HomePage';
+import { test as baseTest, expect } from '../src/fixtures/ImprovedBaseFixture';
 import { TestDataGenerator } from '../src/utils/TestDataGenerator';
 import path from 'path';
 import fs from 'fs';
@@ -27,7 +25,7 @@ function getAuthCredentials() {
 
 // Create a test that doesn't use the stored authentication state
 // This ensures we're always logged out for registration tests
-const test = base.extend({
+const test = baseTest.extend({
   storageState: { cookies: [], origins: [] }, // Empty storage state = logged out
 });
 
@@ -35,16 +33,16 @@ test.describe('User Registration', () => {
   test('should register a new user with valid credentials', async ({
     page,
     browserName,
+    pageManager,
   }) => {
+    const registerPage = pageManager.registerPage;
+
     // Use our shared credentials for the first successful registration
     const username = `testuser_${Date.now()}`;
     const email = TestDataGenerator.generateEmail(username);
     const password = TestDataGenerator.generatePassword();
 
     console.log(`[${browserName}] Registering new user: ${username}`);
-
-    // Create page objects
-    const registerPage = new RegisterPage(page);
 
     // Act - Navigate to register page and register
     await registerPage.navigate();
@@ -66,14 +64,15 @@ test.describe('User Registration', () => {
   test('should show validation error for existing username', async ({
     page,
     browserName,
+    pageManager,
   }) => {
+    const registerPage = pageManager.registerPage;
+
     // Get credentials of the auth user created in setup
     const authUser = getAuthCredentials();
     console.log(
       `[${browserName}] Testing duplicate username validation with setup user: ${authUser.username}`
     );
-
-    const registerPage = new RegisterPage(page);
 
     // Use the page object's navigate method which calls the correct URL structure
     await registerPage.navigate();
@@ -113,14 +112,15 @@ test.describe('User Registration', () => {
   test('should show validation error for existing email', async ({
     page,
     browserName,
+    pageManager,
   }) => {
+    const registerPage = pageManager.registerPage;
+
     // Get credentials of the auth user created in setup
     const authUser = getAuthCredentials();
     console.log(
       `[${browserName}] Testing duplicate email validation with setup user email: ${authUser.email}`
     );
-
-    const registerPage = new RegisterPage(page);
 
     // Use the page object's navigate method which calls the correct URL structure
     await registerPage.navigate();
@@ -160,8 +160,9 @@ test.describe('User Registration', () => {
   test('should enable sign-up button only with all fields filled', async ({
     page,
     browserName,
+    pageManager,
   }) => {
-    const registerPage = new RegisterPage(page);
+    const registerPage = pageManager.registerPage;
 
     console.log(`[${browserName}] Testing sign-up button activation`);
 

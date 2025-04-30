@@ -1,12 +1,7 @@
-import { test, expect } from '@playwright/test';
-import { EditorPage } from '../src/pages/EditorPage';
-import { HomePage } from '../src/pages/HomePage';
+import { test, expect } from '../src/fixtures/ImprovedBaseFixture';
 import { TestDataGenerator } from '../src/utils/TestDataGenerator';
 import path from 'path';
 import fs from 'fs';
-
-// Use the authentication setup
-test.use({ storageState: path.join(process.cwd(), '.auth', 'user.json') });
 
 // Load the saved user credentials if available
 function getTestUser() {
@@ -25,12 +20,13 @@ function getTestUser() {
   };
 }
 
+// Use authenticatedContext for all tests that need authentication
 test.describe('Article Creation', () => {
   test('should create a new article with authenticated user', async ({
-    page,
+    authenticatedContext,
   }) => {
-    const editorPage = new EditorPage(page);
-    const testUser = getTestUser();
+    const { page, pageManager, credentials } = authenticatedContext;
+    const editorPage = pageManager.editorPage;
 
     // Generate article data
     const title = TestDataGenerator.generateArticleTitle();
@@ -38,7 +34,7 @@ test.describe('Article Creation', () => {
     const content = TestDataGenerator.generateArticleContent();
     const tags = TestDataGenerator.generateTags(2);
 
-    // Create article
+    // Create article using the pageManager
     await editorPage.navigate();
     await editorPage.fillArticleForm(title, description, content, tags);
 
@@ -108,9 +104,10 @@ test.describe('Article Creation', () => {
   });
 
   test('should require all mandatory fields for article creation', async ({
-    page,
+    authenticatedContext,
   }) => {
-    const editorPage = new EditorPage(page);
+    const { page, pageManager } = authenticatedContext;
+    const editorPage = pageManager.editorPage;
 
     // Navigate to editor page
     await editorPage.navigate();
@@ -125,8 +122,11 @@ test.describe('Article Creation', () => {
     await expect(page.locator('.error-messages')).toBeVisible();
   });
 
-  test('should create article with multiple tags', async ({ page }) => {
-    const editorPage = new EditorPage(page);
+  test('should create article with multiple tags', async ({
+    authenticatedContext,
+  }) => {
+    const { page, pageManager } = authenticatedContext;
+    const editorPage = pageManager.editorPage;
 
     // Generate article data with many tags
     const title = TestDataGenerator.generateArticleTitle();
@@ -170,9 +170,12 @@ test.describe('Article Creation', () => {
     }
   });
 
-  test('should allow editing an existing article', async ({ page }) => {
-    const editorPage = new EditorPage(page);
-    const homePage = new HomePage(page);
+  test('should allow editing an existing article', async ({
+    authenticatedContext,
+  }) => {
+    const { page, pageManager } = authenticatedContext;
+    const editorPage = pageManager.editorPage;
+    const homePage = pageManager.homePage;
 
     // Create initial article with a unique title using timestamp
     const timestamp = Date.now().toString();
