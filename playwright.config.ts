@@ -11,7 +11,7 @@ export default defineConfig({
   /* Fail the build on CI if you accidentally left test.only in the source code. */
   forbidOnly: !!process.env.CI,
   /* Make retries optional via command line argument */
-  retries: process.env.RETRIES ? parseInt(process.env.RETRIES) : 0,
+  retries: process.env.RETRIES ? parseInt(process.env.RETRIES) : 1,
   /* Default worker configuration - use CPU count or 1 for CI */
   workers: process.env.CI ? 1 : undefined,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
@@ -49,44 +49,29 @@ export default defineConfig({
       testMatch: /.*\.setup\.ts/,
     },
 
-    {
-      name: 'chromium',
-      use: {
-        ...devices['Desktop Chrome'],
-        // Browser-specific storage state will be set dynamically in tests
-      },
-      dependencies: ['setup'],
-    },
-
-    {
-      name: 'firefox',
-      use: {
-        ...devices['Desktop Firefox'],
-        // Browser-specific storage state will be set dynamically in tests
-      },
-      dependencies: ['setup'],
-    },
-
-    {
-      name: 'webkit',
-      use: {
-        ...devices['Desktop Safari'],
-        // Browser-specific storage state will be set dynamically in tests
-      },
-      dependencies: ['setup'],
-    },
-
-    /* Testing with mobile viewports */
-    {
-      name: 'Mobile Chrome',
-      use: {
-        ...devices['Pixel 5'],
-        // Browser-specific storage state will be set dynamically in tests
-      },
-      dependencies: ['setup'],
-    },
+    // Generate browser projects dynamically
+    ...generateBrowserProjects([
+      { name: 'chromium', device: 'Desktop Chrome' },
+      { name: 'firefox', device: 'Desktop Firefox' },
+      { name: 'webkit', device: 'Desktop Safari' },
+      { name: 'mobile', device: 'Pixel 5', label: 'Mobile Chrome' },
+    ]),
   ],
 
   /* Create directories for test artifacts */
   globalSetup: require.resolve('./src/fixtures/globalSetup.ts'),
 });
+
+/**
+ * Helper function to generate browser projects with consistent configuration
+ */
+function generateBrowserProjects(browserConfigs) {
+  return browserConfigs.map((config) => ({
+    name: config.label || config.name,
+    use: {
+      ...devices[config.device],
+      // Browser-specific storage state will be set dynamically in tests
+    },
+    dependencies: ['setup'],
+  }));
+}

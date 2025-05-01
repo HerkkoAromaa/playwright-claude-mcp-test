@@ -24,7 +24,7 @@ export class RegisterPage extends BasePage {
    * Navigate to registration page
    */
   async navigate() {
-    await this.goto('register');
+    await super.navigate('register');
     await this.waitForNavigation();
   }
 

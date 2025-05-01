@@ -30,7 +30,7 @@ export class EditorPage extends BasePage {
    * Navigate to the editor page
    */
   async navigate() {
-    await this.goto('editor');
+    await super.navigate('editor');
     await this.waitForNavigation();
   }
 
@@ -39,7 +39,7 @@ export class EditorPage extends BasePage {
    * @param slug The article slug to edit
    */
   async navigateToEdit(slug: string) {
-    await this.goto(`editor/${slug}`);
+    await super.navigate(`editor/${slug}`);
     await this.waitForNavigation();
   }
 

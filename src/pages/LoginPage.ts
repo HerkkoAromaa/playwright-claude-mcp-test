@@ -24,7 +24,7 @@ export class LoginPage extends BasePage {
    * Navigate to login page
    */
   async navigate() {
-    await this.goto('login');
+    await super.navigate('login');
     await this.waitForNavigation();
   }
 

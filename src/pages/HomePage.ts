@@ -49,7 +49,7 @@ export class HomePage extends BasePage {
    * Navigate to the home page
    */
   async navigate() {
-    await this.goto();
+    await super.navigate('/');
     await this.waitForNavigation();
   }
 

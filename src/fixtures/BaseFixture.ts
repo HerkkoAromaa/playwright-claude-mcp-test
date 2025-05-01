@@ -4,13 +4,14 @@ import { LoginPage } from '../pages/LoginPage';
 import { RegisterPage } from '../pages/RegisterPage';
 import { EditorPage } from '../pages/EditorPage';
 import { TestDataGenerator } from '../utils/TestDataGenerator';
+import { PageManager } from '../manager/PageManager';
 import path from 'path';
 import fs from 'fs';
 
 /**
  * User credential type definition
  */
-type UserCredentials = {
+export type UserCredentials = {
   username: string;
   email: string;
   password: string;
@@ -20,10 +21,14 @@ type UserCredentials = {
  * Page objects fixture type
  */
 type PageObjects = {
+  // Individual page objects for backward compatibility
   homePage: HomePage;
   loginPage: LoginPage;
   registerPage: RegisterPage;
   editorPage: EditorPage;
+
+  // Page manager for accessing all page objects in a cleaner way
+  pageManager: PageManager;
 };
 
 /**
@@ -33,11 +38,13 @@ type AuthFixtures = {
   // Authenticated page using a newly registered user
   authenticatedPage: {
     page: any;
+    pageManager: PageManager;
     credentials: UserCredentials;
   };
   // Shared authenticated page (reuses same user across tests)
   sharedAuthenticatedPage: {
     page: any;
+    pageManager: PageManager;
     credentials: UserCredentials;
   };
 };
@@ -68,7 +75,12 @@ type CombinedFixtures = PageObjects & AuthFixtures;
  * Export the extended test with combined fixtures
  */
 export const test = baseTest.extend<CombinedFixtures>({
-  // Page object fixtures
+  // Page manager fixture - provides centralized access to all page objects
+  pageManager: async ({ page }, use) => {
+    await use(PageManager.getInstance(page));
+  },
+
+  // Individual page object fixtures - for backward compatibility
   homePage: async ({ page }, use) => {
     await use(new HomePage(page));
   },
@@ -82,7 +94,7 @@ export const test = baseTest.extend<CombinedFixtures>({
     await use(new EditorPage(page));
   },
 
-  // Auth fixtures
+  // Auth fixtures with PageManager integration
   authenticatedPage: async ({ browser }, use) => {
     // Create a new context with fresh authentication state
     const context = await browser.newContext();
@@ -94,9 +106,11 @@ export const test = baseTest.extend<CombinedFixtures>({
     const password = TestDataGenerator.generatePassword();
     const userCredentials = { username, email, password };
 
+    // Get the PageManager for this page
+    const pageManager = PageManager.getInstance(page);
+
     // Register and log in with the new user
-    const registerPage = new RegisterPage(page);
-    await registerPage.registerUser(username, email, password);
+    await pageManager.registerPage.registerUser(username, email, password);
 
     // Make sure we're authenticated
     await page.waitForTimeout(1000); // Small wait to ensure session is established
@@ -104,6 +118,7 @@ export const test = baseTest.extend<CombinedFixtures>({
     // Use the authenticated page in the test
     await use({
       page,
+      pageManager,
       credentials: userCredentials,
     });
 
@@ -144,9 +159,11 @@ export const test = baseTest.extend<CombinedFixtures>({
       const password = 'Password123!';
       credentials = { username, email, password };
 
-      // Register and log in
-      const registerPage = new RegisterPage(page);
-      await registerPage.registerUser(username, email, password);
+      // Get PageManager for this page
+      const pageManager = PageManager.getInstance(page);
+
+      // Register and log in with the new user
+      await pageManager.registerPage.registerUser(username, email, password);
 
       // Wait for authentication to complete
       await page.waitForTimeout(1000);
@@ -167,9 +184,13 @@ export const test = baseTest.extend<CombinedFixtures>({
     // Create a page using the authenticated context
     const page = await context.newPage();
 
+    // Get PageManager for this page
+    const pageManager = PageManager.getInstance(page);
+
     // Use the authenticated page in the test
     await use({
       page,
+      pageManager,
       credentials,
     });
 

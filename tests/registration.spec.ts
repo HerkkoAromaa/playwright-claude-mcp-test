@@ -1,4 +1,4 @@
-import { test as baseTest, expect } from '../src/fixtures/ImprovedBaseFixture';
+import { test as baseTest, expect } from '../src/fixtures/BaseFixture';
 import { TestDataGenerator } from '../src/utils/TestDataGenerator';
 import path from 'path';
 import fs from 'fs';

@@ -1,34 +1,41 @@
-import { Locator, Page } from '@playwright/test';
+import { Page, Locator, expect } from '@playwright/test';
 
 /**
- * Base page object that provides common functionality for all pages
+ * BasePage class that provides common functionality for all page objects
  */
-export class BasePage {
-  readonly page: Page;
-  readonly baseUrl: string;
+export abstract class BasePage {
+  protected page: Page;
 
   /**
-   * Create a new BasePage
+   * Base constructor for all page classes
    * @param page Playwright page object
    */
   constructor(page: Page) {
     this.page = page;
-    this.baseUrl = 'https://conduit.bondaracademy.com';
   }
 
   /**
-   * Navigate to a specific path on the site
-   * @param path Path to navigate to (appended to baseUrl)
+   * Navigate to a URL relative to the base URL
+   * @param path Path relative to the base URL
    */
-  async goto(path: string = ''): Promise<void> {
-    await this.page.goto(`${this.baseUrl}/${path}`);
+  async navigate(path: string): Promise<void> {
+    await this.page.goto(path);
   }
 
   /**
    * Get the current URL
+   * @returns The current URL
    */
-  async getUrl(): Promise<string> {
+  async getCurrentUrl(): Promise<string> {
     return this.page.url();
+  }
+
+  /**
+   * Check if page contains text
+   * @param text Text to check for
+   */
+  async containsText(text: string): Promise<void> {
+    await expect(this.page.getByText(text)).toBeVisible();
   }
 
   /**
@@ -39,17 +46,43 @@ export class BasePage {
   }
 
   /**
-   * Check if an element is visible
-   * @param locator Element locator
+   * Fill an input field
+   * @param selector Selector for the input field
+   * @param value Value to fill
    */
-  async isVisible(locator: Locator): Promise<boolean> {
-    return await locator.isVisible();
+  async fill(selector: string | Locator, value: string): Promise<void> {
+    const locator =
+      typeof selector === 'string' ? this.page.locator(selector) : selector;
+    await locator.fill(value);
   }
 
   /**
-   * Get page title
+   * Click an element
+   * @param selector Selector for the element
    */
-  async getTitle(): Promise<string> {
-    return await this.page.title();
+  async click(selector: string | Locator): Promise<void> {
+    const locator =
+      typeof selector === 'string' ? this.page.locator(selector) : selector;
+    await locator.click();
+  }
+
+  /**
+   * Wait for an element to be visible
+   * @param selector Selector for the element
+   */
+  async waitForVisible(selector: string | Locator): Promise<void> {
+    const locator =
+      typeof selector === 'string' ? this.page.locator(selector) : selector;
+    await locator.waitFor({ state: 'visible' });
+  }
+
+  /**
+   * Take a screenshot and save it with a unique name
+   * @param name Name to use for the screenshot
+   */
+  async takeScreenshot(name: string): Promise<void> {
+    await this.page.screenshot({
+      path: `./screenshots/${name}_${Date.now()}.png`,
+    });
   }
 }
