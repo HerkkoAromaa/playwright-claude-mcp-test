@@ -21,31 +21,35 @@ export interface IEditorPage {
     tags?: string[]
   ): Promise<void>;
   isPublishButtonEnabled(): Promise<boolean>;
+  getTagList(): Promise<string[]>;
+  removeTag(tagIndex: number): Promise<void>;
 }
 
 /**
  * Page object for the article editor page
  */
 export class EditorPage extends BasePage implements IEditorPage {
-  protected readonly titleInput: Locator;
-  protected readonly descriptionInput: Locator;
-  protected readonly bodyInput: Locator;
-  protected readonly tagsInput: Locator;
-  protected readonly publishButton: Locator;
-  protected readonly tagList: Locator;
+  private readonly titleInput: Locator;
+  private readonly descriptionInput: Locator;
+  private readonly bodyInput: Locator;
+  private readonly tagsInput: Locator;
+  private readonly publishButton: Locator;
+  private readonly tagList: Locator;
 
   constructor(page: Page) {
     super(page);
-    this.titleInput = page.getByRole('textbox', { name: 'Article Title' });
-    this.descriptionInput = page.getByRole('textbox', {
-      name: "What's this article about?",
-    });
-    this.bodyInput = page.getByRole('textbox', {
-      name: 'Write your article (in markdown)',
-    });
-    this.tagsInput = page.getByRole('textbox', { name: 'Enter tags' });
-    this.publishButton = page.getByRole('button', { name: 'Publish Article' });
-    this.tagList = page.locator('.tag-list');
+    this.titleInput = this.getByRole('textbox', 'Article Title');
+    this.descriptionInput = this.getByRole(
+      'textbox',
+      "What's this article about?"
+    );
+    this.bodyInput = this.getByRole(
+      'textbox',
+      'Write your article (in markdown)'
+    );
+    this.tagsInput = this.getByRole('textbox', 'Enter tags');
+    this.publishButton = this.getByRole('button', 'Publish Article');
+    this.tagList = this.locator('.tag-list');
   }
 
   /**
@@ -116,7 +120,44 @@ export class EditorPage extends BasePage implements IEditorPage {
   }
 
   /**
+   * Get the list of added tags
+   * @returns Array of tag strings
+   */
+  async getTagList(): Promise<string[]> {
+    const tags: string[] = [];
+    const count = await this.tagList.locator('.tag-default').count();
+
+    for (let i = 0; i < count; i++) {
+      const tagText = await this.tagList
+        .locator('.tag-default')
+        .nth(i)
+        .textContent();
+      if (tagText) {
+        // Remove the "× " part that appears before the tag text
+        const cleanedTag = tagText.replace(/^× /, '');
+        tags.push(cleanedTag);
+      }
+    }
+
+    return tags;
+  }
+
+  /**
+   * Remove a tag at the specified index
+   * @param tagIndex Index of the tag to remove
+   */
+  async removeTag(tagIndex: number): Promise<void> {
+    const tagElements = this.tagList.locator('.tag-default');
+    const count = await tagElements.count();
+
+    if (tagIndex >= 0 && tagIndex < count) {
+      await tagElements.nth(tagIndex).click();
+    }
+  }
+
+  /**
    * Check if the publish button is enabled
+   * @returns True if the publish button is enabled
    */
   async isPublishButtonEnabled(): Promise<boolean> {
     return this.publishButton.isEnabled();

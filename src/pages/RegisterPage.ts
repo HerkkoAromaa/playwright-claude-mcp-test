@@ -19,25 +19,26 @@ export interface IRegisterPage {
   ): Promise<void>;
   getErrorMessages(): Promise<string[]>;
   isSignUpButtonEnabled(): Promise<boolean>;
+  hasErrors(): Promise<boolean>;
 }
 
 /**
  * Page object for the registration page
  */
 export class RegisterPage extends BasePage implements IRegisterPage {
-  protected readonly usernameInput: Locator;
-  protected readonly emailInput: Locator;
-  protected readonly passwordInput: Locator;
-  protected readonly signUpButton: Locator;
-  protected readonly errorMessages: Locator;
+  private readonly usernameInput: Locator;
+  private readonly emailInput: Locator;
+  private readonly passwordInput: Locator;
+  private readonly signUpButton: Locator;
+  private readonly errorMessages: Locator;
 
   constructor(page: Page) {
     super(page);
-    this.usernameInput = page.getByRole('textbox', { name: 'Username' });
-    this.emailInput = page.getByRole('textbox', { name: 'Email' });
-    this.passwordInput = page.getByRole('textbox', { name: 'Password' });
-    this.signUpButton = page.getByRole('button', { name: 'Sign up' });
-    this.errorMessages = page.locator('.error-messages li');
+    this.usernameInput = this.getByRole('textbox', 'Username');
+    this.emailInput = this.getByRole('textbox', 'Email');
+    this.passwordInput = this.getByRole('textbox', 'Password');
+    this.signUpButton = this.getByRole('button', 'Sign up');
+    this.errorMessages = this.locator('.error-messages li');
   }
 
   /**
@@ -85,7 +86,16 @@ export class RegisterPage extends BasePage implements IRegisterPage {
   }
 
   /**
+   * Check if there are any error messages
+   * @returns True if there are error messages
+   */
+  async hasErrors(): Promise<boolean> {
+    return (await this.errorMessages.count()) > 0;
+  }
+
+  /**
    * Get error messages if registration fails
+   * @returns Array of error message strings
    */
   async getErrorMessages(): Promise<string[]> {
     const errors: string[] = [];
@@ -100,6 +110,7 @@ export class RegisterPage extends BasePage implements IRegisterPage {
 
   /**
    * Check if the sign-up button is enabled
+   * @returns True if the sign-up button is enabled
    */
   async isSignUpButtonEnabled(): Promise<boolean> {
     return this.signUpButton.isEnabled();

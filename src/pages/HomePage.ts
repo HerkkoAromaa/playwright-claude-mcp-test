@@ -15,50 +15,52 @@ export interface IHomePage {
   getArticleCount(): Promise<number>;
   isAuthenticated(): Promise<boolean>;
   getLoggedInUsername(): Promise<string | null>;
+  getArticleTitle(index: number): Promise<string | null>;
+  getTagList(): Promise<string[]>;
 }
 
 /**
  * Page object for the Home page
  */
 export class HomePage extends BasePage implements IHomePage {
-  protected readonly yourFeedTab: Locator;
-  protected readonly globalFeedTab: Locator;
-  protected readonly articlePreviews: Locator;
-  protected readonly navHome: Locator;
-  protected readonly navSignIn: Locator;
-  protected readonly navSignUp: Locator;
-  protected readonly navNewArticle: Locator;
-  protected readonly navSettings: Locator;
-  protected readonly navProfile: Locator;
-  protected readonly userProfileLink: Locator;
-  protected readonly articleTitles: Locator;
-  protected readonly tagList: Locator;
+  private readonly yourFeedTab: Locator;
+  private readonly globalFeedTab: Locator;
+  private readonly articlePreviews: Locator;
+  private readonly navHome: Locator;
+  private readonly navSignIn: Locator;
+  private readonly navSignUp: Locator;
+  private readonly navNewArticle: Locator;
+  private readonly navSettings: Locator;
+  private readonly navProfile: Locator;
+  private readonly userProfileLink: Locator;
+  private readonly articleTitles: Locator;
+  private readonly tagList: Locator;
 
   constructor(page: Page) {
     super(page);
-    // Navigation elements - using role-based selectors for better reliability
-    this.navHome = page.getByRole('link', { name: 'Home' });
-    this.navSignIn = page.getByRole('link', { name: 'Sign in' });
-    this.navSignUp = page.getByRole('link', { name: 'Sign up' });
-    this.navNewArticle = page.getByRole('link', { name: /New Article/ });
-    this.navSettings = page.getByRole('link', { name: /Settings/ });
-    this.userProfileLink = page
-      .locator('a[href^="/profile/"]')
-      .filter({ hasText: /^(?!Home|Sign)/ });
+    // Navigation elements - using our helper methods for better readability
+    this.navHome = this.getByRole('link', 'Home');
+    this.navSignIn = this.getByRole('link', 'Sign in');
+    this.navSignUp = this.getByRole('link', 'Sign up');
+    this.navNewArticle = this.getByRole('link', /New Article/);
+    this.navSettings = this.getByRole('link', /Settings/);
+    this.userProfileLink = this.locator('a[href^="/profile/"]').filter({
+      hasText: /^(?!Home|Sign)/,
+    });
     this.navProfile = this.userProfileLink;
 
     // Feed tabs
-    this.yourFeedTab = page
+    this.yourFeedTab = this.page
       .getByRole('listitem')
       .filter({ hasText: 'Your Feed' });
-    this.globalFeedTab = page
+    this.globalFeedTab = this.page
       .getByRole('listitem')
       .filter({ hasText: 'Global Feed' });
 
     // Article elements - using more specific selectors
-    this.articlePreviews = page.locator('div.article-preview');
-    this.articleTitles = page.getByRole('heading', { level: 1 });
-    this.tagList = page.locator('.tag-list');
+    this.articlePreviews = this.locator('div.article-preview');
+    this.articleTitles = this.getByRole('heading', { level: 1 });
+    this.tagList = this.locator('.tag-list');
   }
 
   /**
@@ -122,6 +124,35 @@ export class HomePage extends BasePage implements IHomePage {
    */
   async getArticleCount(): Promise<number> {
     return this.articlePreviews.count();
+  }
+
+  /**
+   * Get the title of an article at a specific index
+   * @param index The index of the article
+   */
+  async getArticleTitle(index: number): Promise<string | null> {
+    if (await this.articleTitles.nth(index).isVisible()) {
+      return this.articleTitles.nth(index).textContent();
+    }
+    return null;
+  }
+
+  /**
+   * Get the list of tags shown on the page
+   */
+  async getTagList(): Promise<string[]> {
+    const tags: string[] = [];
+    const count = await this.tagList.locator('.tag-pill').count();
+
+    for (let i = 0; i < count; i++) {
+      const tagText = await this.tagList
+        .locator('.tag-pill')
+        .nth(i)
+        .textContent();
+      if (tagText) tags.push(tagText);
+    }
+
+    return tags;
   }
 
   /**

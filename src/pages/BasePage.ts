@@ -52,6 +52,34 @@ export abstract class BasePage {
   }
 
   /**
+   * Helper method to create a locator by role
+   * @param role The role of the element
+   * @param name The name or label of the element
+   * @returns Locator for the element
+   */
+  protected getByRole(role: string, name: string | RegExp): Locator {
+    return this.page.getByRole(role, { name });
+  }
+
+  /**
+   * Helper method to create a locator by test ID
+   * @param testId The test ID attribute
+   * @returns Locator for the element
+   */
+  protected getByTestId(testId: string): Locator {
+    return this.page.getByTestId(testId);
+  }
+
+  /**
+   * Helper method to create a locator by CSS selector
+   * @param selector CSS selector
+   * @returns Locator for the element
+   */
+  protected locator(selector: string): Locator {
+    return this.page.locator(selector);
+  }
+
+  /**
    * Fill an input field
    * @param selector Selector for the input field
    * @param value Value to fill
@@ -80,6 +108,28 @@ export abstract class BasePage {
     const locator =
       typeof selector === 'string' ? this.page.locator(selector) : selector;
     await locator.waitFor({ state: 'visible' });
+  }
+
+  /**
+   * Check if an element is visible
+   * @param selector Selector for the element
+   * @returns true if the element is visible
+   */
+  async isVisible(selector: ElementSelector): Promise<boolean> {
+    const locator =
+      typeof selector === 'string' ? this.page.locator(selector) : selector;
+    return locator.isVisible();
+  }
+
+  /**
+   * Get text content of an element
+   * @param selector Selector for the element
+   * @returns Text content of the element
+   */
+  async getText(selector: ElementSelector): Promise<string | null> {
+    const locator =
+      typeof selector === 'string' ? this.page.locator(selector) : selector;
+    return locator.textContent();
   }
 
   /**

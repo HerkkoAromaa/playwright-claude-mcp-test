@@ -11,25 +11,26 @@ export interface ILoginPage {
   login(email: string, password: string): Promise<void>;
   getErrorMessages(): Promise<string[]>;
   goToRegister(): Promise<void>;
+  hasErrors(): Promise<boolean>;
 }
 
 /**
  * Page object for the login page
  */
 export class LoginPage extends BasePage implements ILoginPage {
-  protected readonly emailInput: Locator;
-  protected readonly passwordInput: Locator;
-  protected readonly signInButton: Locator;
-  protected readonly errorMessages: Locator;
-  protected readonly needAccountLink: Locator;
+  private readonly emailInput: Locator;
+  private readonly passwordInput: Locator;
+  private readonly signInButton: Locator;
+  private readonly errorMessages: Locator;
+  private readonly needAccountLink: Locator;
 
   constructor(page: Page) {
     super(page);
-    this.emailInput = page.getByRole('textbox', { name: 'Email' });
-    this.passwordInput = page.getByRole('textbox', { name: 'Password' });
-    this.signInButton = page.getByRole('button', { name: 'Sign in' });
-    this.errorMessages = page.locator('.error-messages li');
-    this.needAccountLink = page.getByRole('link', { name: 'Need an account?' });
+    this.emailInput = this.getByRole('textbox', 'Email');
+    this.passwordInput = this.getByRole('textbox', 'Password');
+    this.signInButton = this.getByRole('button', 'Sign in');
+    this.errorMessages = this.locator('.error-messages li');
+    this.needAccountLink = this.getByRole('link', 'Need an account?');
   }
 
   /**
@@ -70,7 +71,16 @@ export class LoginPage extends BasePage implements ILoginPage {
   }
 
   /**
+   * Check if there are any error messages
+   * @returns True if there are error messages
+   */
+  async hasErrors(): Promise<boolean> {
+    return (await this.errorMessages.count()) > 0;
+  }
+
+  /**
    * Get error messages if login fails
+   * @returns Array of error message strings
    */
   async getErrorMessages(): Promise<string[]> {
     const errors: string[] = [];
