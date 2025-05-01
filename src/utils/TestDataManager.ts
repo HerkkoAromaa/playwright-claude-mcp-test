@@ -48,12 +48,12 @@ export class TestDataManager {
   private apiClient: ApiClient | null = null;
   private baseUrl: string;
   private environment: TestEnvironment;
-  
+
   // Storage for created test data to enable cleanup
   private users: Map<string, TestUser> = new Map();
   private articles: Map<string, TestArticle> = new Map();
   private comments: Map<string, TestComment> = new Map();
-  
+
   // Path for saving data between test runs
   private readonly dataFilePath: string;
 
@@ -63,14 +63,14 @@ export class TestDataManager {
   private constructor(baseUrl: string, environment: TestEnvironment = 'dev') {
     this.baseUrl = baseUrl;
     this.environment = environment;
-    
+
     // Set up data persistence file path
     const dataDir = path.join(process.cwd(), '.test-data');
     if (!fs.existsSync(dataDir)) {
       fs.mkdirSync(dataDir, { recursive: true });
     }
     this.dataFilePath = path.join(dataDir, `${environment}-data.json`);
-    
+
     // Load any previously saved data
     this.loadPersistedData();
   }
@@ -78,7 +78,10 @@ export class TestDataManager {
   /**
    * Get the TestDataManager instance (creates one if it doesn't exist)
    */
-  public static getInstance(baseUrl: string, environment: TestEnvironment = 'dev'): TestDataManager {
+  public static getInstance(
+    baseUrl: string,
+    environment: TestEnvironment = 'dev'
+  ): TestDataManager {
     if (!TestDataManager.instance) {
       TestDataManager.instance = new TestDataManager(baseUrl, environment);
     }
@@ -108,14 +111,14 @@ export class TestDataManager {
       username,
       email,
       password,
-      createdAt: new Date()
+      createdAt: new Date(),
     };
 
     // Register the user via API if requested
     if (register) {
       const api = await this.initApiClient();
       await api.register({ username, email, password });
-      
+
       // Get additional user details from API
       const userData = await api.getCurrentUser();
       user.token = userData.user.token;
@@ -138,9 +141,11 @@ export class TestDataManager {
     articleData?: Partial<TestArticle>
   ): Promise<TestArticle> {
     // Generate article data
-    const title = articleData?.title || TestDataGenerator.generateArticleTitle();
+    const title =
+      articleData?.title || TestDataGenerator.generateArticleTitle();
     const description = articleData?.description || `Description for ${title}`;
-    const body = articleData?.body || TestDataGenerator.generateArticleContent();
+    const body =
+      articleData?.body || TestDataGenerator.generateArticleContent();
     const tagList = articleData?.tagList || TestDataGenerator.generateTags();
 
     const article: TestArticle = {
@@ -149,16 +154,21 @@ export class TestDataManager {
       body,
       tagList,
       author: author?.username,
-      createdAt: new Date()
+      createdAt: new Date(),
     };
 
     // Publish the article via API if requested
     if (publish && author && author.token) {
       const api = await this.initApiClient();
       api.setAuthToken(author.token);
-      
+
       try {
-        const response = await api.createArticle(title, description, body, tagList);
+        const response = await api.createArticle(
+          title,
+          description,
+          body,
+          tagList
+        );
         article.slug = response.article.slug;
         article.id = response.article.id;
       } catch (error) {
@@ -208,7 +218,7 @@ export class TestDataManager {
    */
   public async cleanupTestData(olderThanHours: number = 24): Promise<void> {
     const cutoffTime = new Date(Date.now() - olderThanHours * 60 * 60 * 1000);
-    
+
     // Only clean up data in non-production environments
     if (this.environment === 'prod') {
       console.warn('Skipping test data cleanup in production environment');
@@ -217,7 +227,7 @@ export class TestDataManager {
 
     // Initialize API client if needed
     const api = await this.initApiClient();
-    
+
     // Clean up articles
     for (const [key, article] of this.articles.entries()) {
       if (article.createdAt && article.createdAt < cutoffTime) {
@@ -249,7 +259,7 @@ export class TestDataManager {
         this.users.delete(key);
       }
     }
-    
+
     // Save the updated data
     this.persistData();
   }
@@ -263,9 +273,13 @@ export class TestDataManager {
         users: Array.from(this.users.entries()),
         articles: Array.from(this.articles.entries()),
         comments: Array.from(this.comments.entries()),
-        lastUpdated: new Date().toISOString()
+        lastUpdated: new Date().toISOString(),
       };
-      fs.writeFileSync(this.dataFilePath, JSON.stringify(data, null, 2), 'utf-8');
+      fs.writeFileSync(
+        this.dataFilePath,
+        JSON.stringify(data, null, 2),
+        'utf-8'
+      );
     } catch (error) {
       console.error('Failed to persist test data:', error);
     }
@@ -278,35 +292,41 @@ export class TestDataManager {
     try {
       if (fs.existsSync(this.dataFilePath)) {
         const data = JSON.parse(fs.readFileSync(this.dataFilePath, 'utf-8'));
-        
+
         if (data.users) {
-          this.users = new Map(data.users.map((entry: [string, TestUser]) => {
-            // Convert date strings back to Date objects
-            if (entry[1].createdAt) {
-              entry[1].createdAt = new Date(entry[1].createdAt);
-            }
-            return entry;
-          }));
+          this.users = new Map(
+            data.users.map((entry: [string, TestUser]) => {
+              // Convert date strings back to Date objects
+              if (entry[1].createdAt) {
+                entry[1].createdAt = new Date(entry[1].createdAt);
+              }
+              return entry;
+            })
+          );
         }
-        
+
         if (data.articles) {
-          this.articles = new Map(data.articles.map((entry: [string, TestArticle]) => {
-            // Convert date strings back to Date objects
-            if (entry[1].createdAt) {
-              entry[1].createdAt = new Date(entry[1].createdAt);
-            }
-            return entry;
-          }));
+          this.articles = new Map(
+            data.articles.map((entry: [string, TestArticle]) => {
+              // Convert date strings back to Date objects
+              if (entry[1].createdAt) {
+                entry[1].createdAt = new Date(entry[1].createdAt);
+              }
+              return entry;
+            })
+          );
         }
-        
+
         if (data.comments) {
-          this.comments = new Map(data.comments.map((entry: [string, TestComment]) => {
-            // Convert date strings back to Date objects
-            if (entry[1].createdAt) {
-              entry[1].createdAt = new Date(entry[1].createdAt);
-            }
-            return entry;
-          }));
+          this.comments = new Map(
+            data.comments.map((entry: [string, TestComment]) => {
+              // Convert date strings back to Date objects
+              if (entry[1].createdAt) {
+                entry[1].createdAt = new Date(entry[1].createdAt);
+              }
+              return entry;
+            })
+          );
         }
       }
     } catch (error) {

@@ -161,11 +161,16 @@ export class ApiClient {
    */
   public async getArticlesByAuthor(username: string): Promise<any> {
     const params = new URLSearchParams({ author: username });
-    const response = await this.apiContext.get(`/api/articles?${params.toString()}`, {
-      headers: this.authToken ? {
-        Authorization: `Token ${this.authToken}`,
-      } : {},
-    });
+    const response = await this.apiContext.get(
+      `/api/articles?${params.toString()}`,
+      {
+        headers: this.authToken
+          ? {
+              Authorization: `Token ${this.authToken}`,
+            }
+          : {},
+      }
+    );
 
     if (response.ok()) {
       return response.json();
