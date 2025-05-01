@@ -1,4 +1,4 @@
-import { test as baseTest, Page } from '@playwright/test';
+import { test as baseTest, Page, BrowserContext } from '@playwright/test';
 import { HomePage, IHomePage } from '../pages/HomePage';
 import { LoginPage, ILoginPage } from '../pages/LoginPage';
 import { RegisterPage, IRegisterPage } from '../pages/RegisterPage';
@@ -27,6 +27,14 @@ export type AuthenticatedPageState = {
 };
 
 /**
+ * Type alias for worker-scoped auth state
+ */
+type WorkerAuthState = {
+  context: BrowserContext;
+  credentials: UserCredentials;
+};
+
+/**
  * Page objects fixture type using interfaces for better abstraction
  */
 type PageObjects = {
@@ -44,7 +52,7 @@ type PageObjects = {
  * Auth fixtures type
  */
 type AuthFixtures = {
-  // Authenticated page using a newly registered user
+  // Authenticated page using a worker-scoped user
   authenticatedPage: AuthenticatedPageState;
   // Shared authenticated page (reuses same user across tests)
   sharedAuthenticatedPage: AuthenticatedPageState;
@@ -75,7 +83,10 @@ type CombinedFixtures = PageObjects & AuthFixtures;
 /**
  * Export the extended test with combined fixtures
  */
-export const test = baseTest.extend<CombinedFixtures>({
+export const test = baseTest.extend<
+  CombinedFixtures,
+  { workerAuth: WorkerAuthState }
+>({
   // Page manager fixture - provides centralized access to all page objects
   pageManager: async ({ page }, use) => {
     await use(PageManager.getInstance(page));
@@ -95,36 +106,107 @@ export const test = baseTest.extend<CombinedFixtures>({
     await use(new EditorPage(page));
   },
 
-  // Auth fixtures with PageManager integration
-  authenticatedPage: async ({ browser }, use) => {
-    // Create a new context with fresh authentication state
-    const context = await browser.newContext();
-    const page = await context.newPage();
+  // Worker-scoped authentication - creates one user per worker
+  workerAuth: [
+    async ({ browser }, use, workerInfo) => {
+      console.log(
+        `Setting up worker-scoped authentication for worker ${workerInfo.workerIndex}`
+      );
 
-    // Generate random user data
-    const username = TestDataGenerator.generateUsername();
-    const email = TestDataGenerator.generateEmail();
-    const password = TestDataGenerator.generatePassword();
-    const userCredentials = { username, email, password };
+      // Create a unique storage path for this worker
+      const workerAuthPath = path.join(
+        AUTH_DIR,
+        `worker-auth-${workerInfo.workerIndex}.json`
+      );
+      let context: BrowserContext;
+      let credentials: UserCredentials;
 
-    // Get the PageManager for this page
+      // Check if we have existing auth state for this worker
+      if (fs.existsSync(workerAuthPath)) {
+        // Load existing auth state
+        console.log(
+          `Using existing auth state for worker ${workerInfo.workerIndex}`
+        );
+        context = await browser.newContext({
+          storageState: workerAuthPath,
+        });
+
+        // Load credentials from the companion file
+        const credPath = workerAuthPath.replace('.json', '-creds.json');
+        if (fs.existsSync(credPath)) {
+          credentials = JSON.parse(fs.readFileSync(credPath, 'utf-8'));
+        } else {
+          // Fallback credentials if file is missing (should not happen normally)
+          credentials = {
+            username: `worker_${workerInfo.workerIndex}_user`,
+            email: `worker_${workerInfo.workerIndex}@example.com`,
+            password: 'Password123!',
+          };
+        }
+      } else {
+        // Create new user and save auth state
+        console.log(`Creating new user for worker ${workerInfo.workerIndex}`);
+        context = await browser.newContext();
+        const page = await context.newPage();
+
+        // Generate credentials with worker index to make them recognizable
+        const username = `worker${workerInfo.workerIndex}_${Date.now()}`;
+        const email = `worker${
+          workerInfo.workerIndex
+        }_${Date.now()}@example.com`;
+        const password = TestDataGenerator.generatePassword();
+        credentials = { username, email, password };
+
+        console.log(`Registering user: ${username}`);
+
+        // Get PageManager for this page
+        const pageManager = PageManager.getInstance(page);
+
+        // Register and log in with the new user
+        await pageManager.registerPage.registerUser(username, email, password);
+
+        // Wait for authentication to complete
+        await page.waitForTimeout(1000);
+
+        // Save authentication state
+        await context.storageState({ path: workerAuthPath });
+
+        // Save credentials to a companion file
+        fs.writeFileSync(
+          workerAuthPath.replace('.json', '-creds.json'),
+          JSON.stringify(credentials),
+          'utf-8'
+        );
+
+        await page.close();
+      }
+
+      // Provide the worker-scoped authentication to tests
+      await use({ context, credentials });
+
+      // Close the context when all tests are done
+      await context.close();
+    },
+    { scope: 'worker' },
+  ],
+
+  // Auth fixtures with PageManager integration - now using worker-scoped auth
+  authenticatedPage: async ({ workerAuth }, use) => {
+    // Create a page using the authenticated context from worker-scoped fixture
+    const page = await workerAuth.context.newPage();
+
+    // Get PageManager for this page
     const pageManager = PageManager.getInstance(page);
-
-    // Register and log in with the new user
-    await pageManager.registerPage.registerUser(username, email, password);
-
-    // Make sure we're authenticated
-    await page.waitForTimeout(1000); // Small wait to ensure session is established
 
     // Use the authenticated page in the test
     await use({
       page,
       pageManager,
-      credentials: userCredentials,
+      credentials: workerAuth.credentials,
     });
 
-    // Clean up after use
-    await context.close();
+    // Clean up the page after the test but keep the context
+    await page.close();
   },
 
   sharedAuthenticatedPage: async ({ browser }, use) => {
