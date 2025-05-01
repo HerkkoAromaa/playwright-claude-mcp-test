@@ -2,15 +2,37 @@ import { Locator, Page } from '@playwright/test';
 import { BasePage } from './BasePage';
 
 /**
+ * Interface defining the contract for EditorPage
+ */
+export interface IEditorPage {
+  navigate(): Promise<void>;
+  navigateToEdit(slug: string): Promise<void>;
+  fillArticleForm(
+    title: string,
+    description: string,
+    body: string,
+    tags?: string[]
+  ): Promise<void>;
+  publishArticle(): Promise<void>;
+  createArticle(
+    title: string,
+    description: string,
+    body: string,
+    tags?: string[]
+  ): Promise<void>;
+  isPublishButtonEnabled(): Promise<boolean>;
+}
+
+/**
  * Page object for the article editor page
  */
-export class EditorPage extends BasePage {
-  readonly titleInput: Locator;
-  readonly descriptionInput: Locator;
-  readonly bodyInput: Locator;
-  readonly tagsInput: Locator;
-  readonly publishButton: Locator;
-  readonly tagList: Locator;
+export class EditorPage extends BasePage implements IEditorPage {
+  protected readonly titleInput: Locator;
+  protected readonly descriptionInput: Locator;
+  protected readonly bodyInput: Locator;
+  protected readonly tagsInput: Locator;
+  protected readonly publishButton: Locator;
+  protected readonly tagList: Locator;
 
   constructor(page: Page) {
     super(page);
@@ -97,6 +119,6 @@ export class EditorPage extends BasePage {
    * Check if the publish button is enabled
    */
   async isPublishButtonEnabled(): Promise<boolean> {
-    return await this.publishButton.isEnabled();
+    return this.publishButton.isEnabled();
   }
 }

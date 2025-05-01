@@ -2,14 +2,34 @@ import { Locator, Page } from '@playwright/test';
 import { BasePage } from './BasePage';
 
 /**
+ * Interface defining the contract for RegisterPage
+ */
+export interface IRegisterPage {
+  navigate(): Promise<void>;
+  fillRegistrationForm(
+    username: string,
+    email: string,
+    password: string
+  ): Promise<void>;
+  submitForm(): Promise<void>;
+  registerUser(
+    username: string,
+    email: string,
+    password: string
+  ): Promise<void>;
+  getErrorMessages(): Promise<string[]>;
+  isSignUpButtonEnabled(): Promise<boolean>;
+}
+
+/**
  * Page object for the registration page
  */
-export class RegisterPage extends BasePage {
-  readonly usernameInput: Locator;
-  readonly emailInput: Locator;
-  readonly passwordInput: Locator;
-  readonly signUpButton: Locator;
-  readonly errorMessages: Locator;
+export class RegisterPage extends BasePage implements IRegisterPage {
+  protected readonly usernameInput: Locator;
+  protected readonly emailInput: Locator;
+  protected readonly passwordInput: Locator;
+  protected readonly signUpButton: Locator;
+  protected readonly errorMessages: Locator;
 
   constructor(page: Page) {
     super(page);
@@ -82,6 +102,6 @@ export class RegisterPage extends BasePage {
    * Check if the sign-up button is enabled
    */
   async isSignUpButtonEnabled(): Promise<boolean> {
-    return await this.signUpButton.isEnabled();
+    return this.signUpButton.isEnabled();
   }
 }

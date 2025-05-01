@@ -1,6 +1,12 @@
 import { Page, Locator, expect } from '@playwright/test';
 
 /**
+ * Type aliases for common patterns
+ */
+export type ElementSelector = string | Locator;
+export type PageAction = () => Promise<void>;
+
+/**
  * BasePage class that provides common functionality for all page objects
  */
 export abstract class BasePage {
@@ -18,7 +24,7 @@ export abstract class BasePage {
    * Navigate to a URL relative to the base URL
    * @param path Path relative to the base URL
    */
-  async navigate(path: string): Promise<void> {
+  async navigate(path: string) {
     await this.page.goto(path);
   }
 
@@ -34,14 +40,14 @@ export abstract class BasePage {
    * Check if page contains text
    * @param text Text to check for
    */
-  async containsText(text: string): Promise<void> {
+  async containsText(text: string) {
     await expect(this.page.getByText(text)).toBeVisible();
   }
 
   /**
    * Wait for navigation to complete
    */
-  async waitForNavigation(): Promise<void> {
+  async waitForNavigation() {
     await this.page.waitForLoadState('networkidle');
   }
 
@@ -50,7 +56,7 @@ export abstract class BasePage {
    * @param selector Selector for the input field
    * @param value Value to fill
    */
-  async fill(selector: string | Locator, value: string): Promise<void> {
+  async fill(selector: ElementSelector, value: string) {
     const locator =
       typeof selector === 'string' ? this.page.locator(selector) : selector;
     await locator.fill(value);
@@ -60,7 +66,7 @@ export abstract class BasePage {
    * Click an element
    * @param selector Selector for the element
    */
-  async click(selector: string | Locator): Promise<void> {
+  async click(selector: ElementSelector) {
     const locator =
       typeof selector === 'string' ? this.page.locator(selector) : selector;
     await locator.click();
@@ -70,7 +76,7 @@ export abstract class BasePage {
    * Wait for an element to be visible
    * @param selector Selector for the element
    */
-  async waitForVisible(selector: string | Locator): Promise<void> {
+  async waitForVisible(selector: ElementSelector) {
     const locator =
       typeof selector === 'string' ? this.page.locator(selector) : selector;
     await locator.waitFor({ state: 'visible' });
@@ -80,7 +86,7 @@ export abstract class BasePage {
    * Take a screenshot and save it with a unique name
    * @param name Name to use for the screenshot
    */
-  async takeScreenshot(name: string): Promise<void> {
+  async takeScreenshot(name: string) {
     await this.page.screenshot({
       path: `./screenshots/${name}_${Date.now()}.png`,
     });

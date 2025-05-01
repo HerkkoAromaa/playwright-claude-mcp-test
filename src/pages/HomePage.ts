@@ -2,21 +2,37 @@ import { Locator, Page } from '@playwright/test';
 import { BasePage } from './BasePage';
 
 /**
+ * Interface defining the contract for HomePage
+ */
+export interface IHomePage {
+  navigate(): Promise<void>;
+  clickSignIn(): Promise<void>;
+  clickSignUp(): Promise<void>;
+  clickNewArticle(): Promise<void>;
+  clickSettings(): Promise<void>;
+  clickYourFeed(): Promise<void>;
+  clickGlobalFeed(): Promise<void>;
+  getArticleCount(): Promise<number>;
+  isAuthenticated(): Promise<boolean>;
+  getLoggedInUsername(): Promise<string | null>;
+}
+
+/**
  * Page object for the Home page
  */
-export class HomePage extends BasePage {
-  readonly yourFeedTab: Locator;
-  readonly globalFeedTab: Locator;
-  readonly articlePreviews: Locator;
-  readonly navHome: Locator;
-  readonly navSignIn: Locator;
-  readonly navSignUp: Locator;
-  readonly navNewArticle: Locator;
-  readonly navSettings: Locator;
-  readonly navProfile: Locator;
-  readonly userProfileLink: Locator;
-  readonly articleTitles: Locator;
-  readonly tagList: Locator;
+export class HomePage extends BasePage implements IHomePage {
+  protected readonly yourFeedTab: Locator;
+  protected readonly globalFeedTab: Locator;
+  protected readonly articlePreviews: Locator;
+  protected readonly navHome: Locator;
+  protected readonly navSignIn: Locator;
+  protected readonly navSignUp: Locator;
+  protected readonly navNewArticle: Locator;
+  protected readonly navSettings: Locator;
+  protected readonly navProfile: Locator;
+  protected readonly userProfileLink: Locator;
+  protected readonly articleTitles: Locator;
+  protected readonly tagList: Locator;
 
   constructor(page: Page) {
     super(page);
@@ -105,7 +121,7 @@ export class HomePage extends BasePage {
    * Get the number of article previews on the page
    */
   async getArticleCount(): Promise<number> {
-    return await this.articlePreviews.count();
+    return this.articlePreviews.count();
   }
 
   /**
@@ -123,7 +139,7 @@ export class HomePage extends BasePage {
    */
   async getLoggedInUsername(): Promise<string | null> {
     if (await this.isAuthenticated()) {
-      return await this.userProfileLink.textContent();
+      return this.userProfileLink.textContent();
     }
     return null;
   }

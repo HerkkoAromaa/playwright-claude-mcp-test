@@ -2,14 +2,26 @@ import { Locator, Page } from '@playwright/test';
 import { BasePage } from './BasePage';
 
 /**
+ * Interface defining the contract for LoginPage
+ */
+export interface ILoginPage {
+  navigate(): Promise<void>;
+  fillLoginForm(email: string, password: string): Promise<void>;
+  submitForm(): Promise<void>;
+  login(email: string, password: string): Promise<void>;
+  getErrorMessages(): Promise<string[]>;
+  goToRegister(): Promise<void>;
+}
+
+/**
  * Page object for the login page
  */
-export class LoginPage extends BasePage {
-  readonly emailInput: Locator;
-  readonly passwordInput: Locator;
-  readonly signInButton: Locator;
-  readonly errorMessages: Locator;
-  readonly needAccountLink: Locator;
+export class LoginPage extends BasePage implements ILoginPage {
+  protected readonly emailInput: Locator;
+  protected readonly passwordInput: Locator;
+  protected readonly signInButton: Locator;
+  protected readonly errorMessages: Locator;
+  protected readonly needAccountLink: Locator;
 
   constructor(page: Page) {
     super(page);

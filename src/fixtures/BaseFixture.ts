@@ -1,8 +1,8 @@
-import { test as baseTest } from '@playwright/test';
-import { HomePage } from '../pages/HomePage';
-import { LoginPage } from '../pages/LoginPage';
-import { RegisterPage } from '../pages/RegisterPage';
-import { EditorPage } from '../pages/EditorPage';
+import { test as baseTest, Page } from '@playwright/test';
+import { HomePage, IHomePage } from '../pages/HomePage';
+import { LoginPage, ILoginPage } from '../pages/LoginPage';
+import { RegisterPage, IRegisterPage } from '../pages/RegisterPage';
+import { EditorPage, IEditorPage } from '../pages/EditorPage';
 import { TestDataGenerator } from '../utils/TestDataGenerator';
 import { PageManager } from '../manager/PageManager';
 import path from 'path';
@@ -18,14 +18,23 @@ export type UserCredentials = {
 };
 
 /**
- * Page objects fixture type
+ * Type alias for authenticated page state
+ */
+export type AuthenticatedPageState = {
+  page: Page;
+  pageManager: PageManager;
+  credentials: UserCredentials;
+};
+
+/**
+ * Page objects fixture type using interfaces for better abstraction
  */
 type PageObjects = {
   // Individual page objects for backward compatibility
-  homePage: HomePage;
-  loginPage: LoginPage;
-  registerPage: RegisterPage;
-  editorPage: EditorPage;
+  homePage: IHomePage;
+  loginPage: ILoginPage;
+  registerPage: IRegisterPage;
+  editorPage: IEditorPage;
 
   // Page manager for accessing all page objects in a cleaner way
   pageManager: PageManager;
@@ -36,17 +45,9 @@ type PageObjects = {
  */
 type AuthFixtures = {
   // Authenticated page using a newly registered user
-  authenticatedPage: {
-    page: any;
-    pageManager: PageManager;
-    credentials: UserCredentials;
-  };
+  authenticatedPage: AuthenticatedPageState;
   // Shared authenticated page (reuses same user across tests)
-  sharedAuthenticatedPage: {
-    page: any;
-    pageManager: PageManager;
-    credentials: UserCredentials;
-  };
+  sharedAuthenticatedPage: AuthenticatedPageState;
 };
 
 /**
