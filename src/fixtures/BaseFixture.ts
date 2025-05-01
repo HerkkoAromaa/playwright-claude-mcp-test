@@ -5,6 +5,7 @@ import { RegisterPage, IRegisterPage } from '../pages/RegisterPage';
 import { EditorPage, IEditorPage } from '../pages/EditorPage';
 import { TestDataGenerator } from '../utils/TestDataGenerator';
 import { PageManager } from '../manager/PageManager';
+import { test as testDataTest, TestDataState, TestUser } from './TestDataFixture';
 import path from 'path';
 import fs from 'fs';
 
@@ -32,6 +33,7 @@ export type AuthenticatedPageState = {
 type WorkerAuthState = {
   context: BrowserContext;
   credentials: UserCredentials;
+  testUser?: TestUser;
 };
 
 /**
@@ -76,17 +78,16 @@ if (!fs.existsSync(AUTH_DIR)) {
 const SHARED_AUTH_STATE_PATH = path.join(AUTH_DIR, 'shared-user.json');
 
 /**
- * Combined fixtures type
+ * Combined fixtures type including test data
  */
-type CombinedFixtures = PageObjects & AuthFixtures;
+type CombinedFixtures = PageObjects & AuthFixtures & {
+  testData: TestDataState
+};
 
 /**
  * Export the extended test with combined fixtures
  */
-export const test = baseTest.extend<
-  CombinedFixtures,
-  { workerAuth: WorkerAuthState }
->({
+export const test = testDataTest.extend<CombinedFixtures, { workerAuth: WorkerAuthState }>({
   // Page manager fixture - provides centralized access to all page objects
   pageManager: async ({ page }, use) => {
     await use(PageManager.getInstance(page));
@@ -107,94 +108,102 @@ export const test = baseTest.extend<
   },
 
   // Worker-scoped authentication - creates one user per worker
-  workerAuth: [
-    async ({ browser }, use, workerInfo) => {
-      console.log(
-        `Setting up worker-scoped authentication for worker ${workerInfo.workerIndex}`
-      );
+  workerAuth: [async ({ browser, testData }, use, workerInfo) => {
+    console.log(`Setting up worker-scoped authentication for worker ${workerInfo.workerIndex}`);
+    
+    // Create a unique storage path for this worker
+    const workerAuthPath = path.join(AUTH_DIR, `worker-auth-${workerInfo.workerIndex}.json`);
+    let context: BrowserContext;
+    let credentials: UserCredentials;
+    let testUser: TestUser | undefined;
+    
+    // Check if we have existing auth state for this worker
+    if (fs.existsSync(workerAuthPath)) {
+      // Load existing auth state
+      console.log(`Using existing auth state for worker ${workerInfo.workerIndex}`);
+      context = await browser.newContext({
+        storageState: workerAuthPath,
+      });
 
-      // Create a unique storage path for this worker
-      const workerAuthPath = path.join(
-        AUTH_DIR,
-        `worker-auth-${workerInfo.workerIndex}.json`
-      );
-      let context: BrowserContext;
-      let credentials: UserCredentials;
-
-      // Check if we have existing auth state for this worker
-      if (fs.existsSync(workerAuthPath)) {
-        // Load existing auth state
-        console.log(
-          `Using existing auth state for worker ${workerInfo.workerIndex}`
-        );
-        context = await browser.newContext({
-          storageState: workerAuthPath,
-        });
-
-        // Load credentials from the companion file
-        const credPath = workerAuthPath.replace('.json', '-creds.json');
-        if (fs.existsSync(credPath)) {
-          credentials = JSON.parse(fs.readFileSync(credPath, 'utf-8'));
-        } else {
-          // Fallback credentials if file is missing (should not happen normally)
-          credentials = {
-            username: `worker_${workerInfo.workerIndex}_user`,
-            email: `worker_${workerInfo.workerIndex}@example.com`,
-            password: 'Password123!',
-          };
-        }
+      // Load credentials from the companion file
+      const credPath = workerAuthPath.replace('.json', '-creds.json');
+      if (fs.existsSync(credPath)) {
+        credentials = JSON.parse(fs.readFileSync(credPath, 'utf-8'));
+        
+        // Create a TestUser object to represent the existing user
+        testUser = {
+          username: credentials.username,
+          email: credentials.email,
+          password: credentials.password
+        };
       } else {
-        // Create new user and save auth state
-        console.log(`Creating new user for worker ${workerInfo.workerIndex}`);
-        context = await browser.newContext();
-        const page = await context.newPage();
-
-        // Generate credentials with worker index to make them recognizable
-        const username = `worker${workerInfo.workerIndex}_${Date.now()}`;
-        const email = `worker${
-          workerInfo.workerIndex
-        }_${Date.now()}@example.com`;
-        const password = TestDataGenerator.generatePassword();
-        credentials = { username, email, password };
-
-        console.log(`Registering user: ${username}`);
-
-        // Get PageManager for this page
-        const pageManager = PageManager.getInstance(page);
-
-        // Register and log in with the new user
-        await pageManager.registerPage.registerUser(username, email, password);
-
-        // Wait for authentication to complete
-        await page.waitForTimeout(1000);
-
-        // Save authentication state
-        await context.storageState({ path: workerAuthPath });
-
-        // Save credentials to a companion file
-        fs.writeFileSync(
-          workerAuthPath.replace('.json', '-creds.json'),
-          JSON.stringify(credentials),
-          'utf-8'
-        );
-
-        await page.close();
+        // Fallback credentials if file is missing (should not happen normally)
+        credentials = {
+          username: `worker_${workerInfo.workerIndex}_user`,
+          email: `worker_${workerInfo.workerIndex}@example.com`,
+          password: 'Password123!',
+        };
       }
+    } else {
+      // Create new user and save auth state
+      console.log(`Creating new user for worker ${workerInfo.workerIndex}`);
+      context = await browser.newContext();
+      const page = await context.newPage();
+      
+      // Create a user using our test data fixture instead of directly
+      testUser = await testData.createUser();
+      
+      // Add worker index to make username recognizable
+      testUser.username = `worker${workerInfo.workerIndex}_${testUser.username}`;
+      testUser.email = `worker${workerInfo.workerIndex}_${testUser.email}`;
+      
+      // Extract the credentials for use with Playwright
+      credentials = {
+        username: testUser.username,
+        email: testUser.email,
+        password: testUser.password
+      };
 
-      // Provide the worker-scoped authentication to tests
-      await use({ context, credentials });
+      console.log(`Registering user: ${testUser.username}`);
+      
+      // Get PageManager for this page
+      const pageManager = PageManager.getInstance(page);
 
-      // Close the context when all tests are done
-      await context.close();
-    },
-    { scope: 'worker' },
-  ],
+      // Register and log in with the new user
+      await pageManager.registerPage.registerUser(
+        credentials.username,
+        credentials.email,
+        credentials.password
+      );
+
+      // Wait for authentication to complete
+      await page.waitForTimeout(1000);
+
+      // Save authentication state
+      await context.storageState({ path: workerAuthPath });
+
+      // Save credentials to a companion file
+      fs.writeFileSync(
+        workerAuthPath.replace('.json', '-creds.json'),
+        JSON.stringify(credentials),
+        'utf-8'
+      );
+
+      await page.close();
+    }
+
+    // Provide the worker-scoped authentication to tests
+    await use({ context, credentials, testUser });
+    
+    // Close the context when all tests are done
+    await context.close();
+  }, { scope: 'worker' }],
 
   // Auth fixtures with PageManager integration - now using worker-scoped auth
   authenticatedPage: async ({ workerAuth }, use) => {
     // Create a page using the authenticated context from worker-scoped fixture
     const page = await workerAuth.context.newPage();
-
+    
     // Get PageManager for this page
     const pageManager = PageManager.getInstance(page);
 
@@ -209,9 +218,10 @@ export const test = baseTest.extend<
     await page.close();
   },
 
-  sharedAuthenticatedPage: async ({ browser }, use) => {
+  sharedAuthenticatedPage: async ({ browser, testData }, use) => {
     let credentials: UserCredentials;
     let context = await browser.newContext();
+    let testUser: TestUser | undefined;
 
     // Check if we have existing auth state
     if (fs.existsSync(SHARED_AUTH_STATE_PATH)) {
@@ -224,6 +234,13 @@ export const test = baseTest.extend<
       const credPath = SHARED_AUTH_STATE_PATH.replace('.json', '-creds.json');
       if (fs.existsSync(credPath)) {
         credentials = JSON.parse(fs.readFileSync(credPath, 'utf-8'));
+        
+        // Create a TestUser object
+        testUser = {
+          username: credentials.username,
+          email: credentials.email,
+          password: credentials.password
+        };
       } else {
         // Fallback credentials if file is missing
         credentials = {
@@ -236,17 +253,28 @@ export const test = baseTest.extend<
       // Create new user and save auth state
       const page = await context.newPage();
 
-      // Generate credentials
-      const username = `shareduser_${Date.now()}`;
-      const email = `shareduser_${Date.now()}@example.com`;
-      const password = 'Password123!';
-      credentials = { username, email, password };
+      // Create a user with testData fixture
+      testUser = await testData.createUser();
+      
+      // Make the username indicate this is a shared user
+      testUser.username = `shareduser_${testUser.username}`;
+      testUser.email = `shareduser_${testUser.email}`;
+      
+      credentials = {
+        username: testUser.username,
+        email: testUser.email,
+        password: testUser.password
+      };
 
       // Get PageManager for this page
       const pageManager = PageManager.getInstance(page);
 
       // Register and log in with the new user
-      await pageManager.registerPage.registerUser(username, email, password);
+      await pageManager.registerPage.registerUser(
+        credentials.username, 
+        credentials.email,
+        credentials.password
+      );
 
       // Wait for authentication to complete
       await page.waitForTimeout(1000);

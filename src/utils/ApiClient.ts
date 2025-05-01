@@ -32,7 +32,7 @@ export class ApiClient {
   /**
    * Login via API and store auth token
    */
-  public async login(email: string, password: string): Promise<void> {
+  public async login(email: string, password: string): Promise<any> {
     const response = await this.apiContext.post('/api/users/login', {
       data: {
         user: { email, password },
@@ -42,6 +42,7 @@ export class ApiClient {
     if (response.ok()) {
       const data = await response.json();
       this.authToken = data.user.token;
+      return data.user;
     } else {
       throw new Error(`Login failed: ${response.statusText()}`);
     }
@@ -50,7 +51,7 @@ export class ApiClient {
   /**
    * Register a new user via API
    */
-  public async register(credentials: UserCredentials): Promise<void> {
+  public async register(credentials: UserCredentials): Promise<any> {
     const { username, email, password } = credentials;
 
     const response = await this.apiContext.post('/api/users', {
@@ -62,6 +63,7 @@ export class ApiClient {
     if (response.ok()) {
       const data = await response.json();
       this.authToken = data.user.token;
+      return data.user;
     } else {
       throw new Error(`Registration failed: ${response.statusText()}`);
     }
@@ -124,6 +126,51 @@ export class ApiClient {
       throw new Error(
         `Failed to create article: ${response.statusText()} (${response.status()})`
       );
+    }
+  }
+
+  /**
+   * Delete an article via API
+   */
+  public async deleteArticle(slug: string): Promise<void> {
+    if (!this.authToken) {
+      throw new Error('Not authenticated. Login first.');
+    }
+
+    console.log(`Deleting article: ${slug}`);
+
+    const response = await this.apiContext.delete(`/api/articles/${slug}`, {
+      headers: {
+        Authorization: `Token ${this.authToken}`,
+      },
+    });
+
+    if (!response.ok()) {
+      const responseText = await response
+        .text()
+        .catch(() => 'Unable to get response text');
+      console.error('Error response:', responseText);
+      throw new Error(
+        `Failed to delete article: ${response.statusText()} (${response.status()})`
+      );
+    }
+  }
+
+  /**
+   * Get articles by author
+   */
+  public async getArticlesByAuthor(username: string): Promise<any> {
+    const params = new URLSearchParams({ author: username });
+    const response = await this.apiContext.get(`/api/articles?${params.toString()}`, {
+      headers: this.authToken ? {
+        Authorization: `Token ${this.authToken}`,
+      } : {},
+    });
+
+    if (response.ok()) {
+      return response.json();
+    } else {
+      throw new Error(`Failed to get articles: ${response.statusText()}`);
     }
   }
 
