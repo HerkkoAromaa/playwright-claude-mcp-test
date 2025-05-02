@@ -103,7 +103,6 @@ export const test = baseTest.extend<
             users.push(user);
             return user;
           } catch (error) {
-            console.error(`Failed to register user ${user.username}:`, error);
             throw error;
           }
         },
@@ -133,7 +132,6 @@ export const test = baseTest.extend<
 
               article.slug = response.article.slug;
             } catch (error) {
-              console.error(`Failed to create article via API:`, error);
               // Continue even if API creation fails - return the generated data
             }
           }
@@ -158,18 +156,14 @@ export const test = baseTest.extend<
               if (authorToken) {
                 apiClient.setAuthToken(authorToken);
                 await apiClient.deleteArticle(article.slug);
-                console.log(`Cleaned up article: ${article.title}`);
               }
             } catch (error) {
-              console.error(
-                `Failed to clean up article ${article.title}:`,
-                error
-              );
+              // Silent error in release mode
             }
           }
         }
       } catch (e) {
-        console.error('Error during test data cleanup:', e);
+        // Silent error in release mode
       } finally {
         await apiClient.dispose();
       }

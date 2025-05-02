@@ -172,7 +172,6 @@ export class TestDataManager {
         article.slug = response.article.slug;
         article.id = response.article.id;
       } catch (error) {
-        console.error('Error creating article via API:', error);
         throw error;
       }
     }
@@ -221,7 +220,6 @@ export class TestDataManager {
 
     // Only clean up data in non-production environments
     if (this.environment === 'prod') {
-      console.warn('Skipping test data cleanup in production environment');
       return;
     }
 
@@ -235,9 +233,8 @@ export class TestDataManager {
           try {
             // TODO: Implement API call to delete article
             // await api.deleteArticle(article.slug);
-            console.log(`Deleted article: ${article.title}`);
           } catch (error) {
-            console.error(`Failed to delete article: ${article.title}`, error);
+            // Silently continue on error
           }
         }
         this.articles.delete(key);
@@ -251,9 +248,8 @@ export class TestDataManager {
           try {
             // TODO: Implement API call to delete user
             // await api.deleteUser(user.id);
-            console.log(`Deleted user: ${user.username}`);
           } catch (error) {
-            console.error(`Failed to delete user: ${user.username}`, error);
+            // Silently continue on error
           }
         }
         this.users.delete(key);
@@ -281,7 +277,7 @@ export class TestDataManager {
         'utf-8'
       );
     } catch (error) {
-      console.error('Failed to persist test data:', error);
+      // Silent error in release mode
     }
   }
 
@@ -330,7 +326,7 @@ export class TestDataManager {
         }
       }
     } catch (error) {
-      console.error('Failed to load persisted test data:', error);
+      // Silent error in release mode
     }
   }
 

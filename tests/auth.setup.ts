@@ -20,8 +20,6 @@ setup('authenticate', async ({ page }) => {
   const email = TestDataGenerator.generateEmail();
   const password = TestDataGenerator.generatePassword();
 
-  console.log(`Setting up test user: ${username}, ${email}`);
-
   // Register a new user
   const registerPage = new RegisterPage(page);
   await registerPage.navigate();
@@ -36,31 +34,10 @@ setup('authenticate', async ({ page }) => {
 
   // Double-check that we're actually logged in with the correct user
   const loggedInUsername = await homePage.getLoggedInUsername();
-  console.log(`Authenticated as: ${loggedInUsername}`);
   expect(loggedInUsername).toContain(username);
 
   // Save authentication state
   await page.context().storageState({ path: authFile });
-
-  // Verify auth file was created successfully
-  if (fs.existsSync(authFile)) {
-    const stats = fs.statSync(authFile);
-    console.log(
-      `Authentication state saved to ${authFile} (${stats.size} bytes)`
-    );
-
-    // Optionally verify the file content contains expected data
-    try {
-      const authData = JSON.parse(fs.readFileSync(authFile, 'utf-8'));
-      if (authData.origins && authData.origins.length > 0) {
-        console.log('Auth state contains valid origin data');
-      }
-    } catch (err) {
-      console.error('Error validating auth file:', err);
-    }
-  } else {
-    console.error(`Failed to save authentication state to ${authFile}`);
-  }
 
   // Save credentials to a companion file for reference
   fs.writeFileSync(

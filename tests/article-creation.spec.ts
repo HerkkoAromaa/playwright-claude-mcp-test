@@ -191,10 +191,6 @@ test.describe('Article Creation', () => {
       // Wait for navigation to complete and the article page to fully load
       await page.waitForLoadState('networkidle');
 
-      // Get the current URL to extract the slug for future reference
-      const currentUrl = page.url();
-      console.log('Article created at URL:', currentUrl);
-
       // Verify article content in the UI with improved waiting
       await expect(page.getByRole('heading', { name: title })).toBeVisible({
         timeout: 10000,
@@ -215,9 +211,6 @@ test.describe('Article Creation', () => {
       await expect(page.locator('.tag-list li')).toHaveCount(tags.length, {
         timeout: 5000,
       });
-
-      // Success - we've verified the article was created and displayed correctly
-      console.log('Article verification complete');
     } finally {
       // Only dispose the API client as the page will be handled by the fixture
       await apiClient.dispose();

@@ -11,10 +11,8 @@ const credentialsPath = path.join(authDir, 'credentials.json');
 function getAuthCredentials() {
   try {
     const credentials = JSON.parse(fs.readFileSync(credentialsPath, 'utf8'));
-    console.log('Found auth credentials for user:', credentials.username);
     return credentials;
   } catch (error) {
-    console.error('Error reading auth credentials:', error);
     return {
       username: 'testuser',
       email: 'test@example.com',
@@ -38,8 +36,6 @@ test.describe('User Registration', () => {
     const email = TestDataGenerator.generateEmail(username);
     const password = TestDataGenerator.generatePassword();
 
-    console.log(`[${browserName}] Registering new user: ${username}`);
-
     // Act - Navigate to register page and register
     await registerPage.navigate();
     await registerPage.fillRegistrationForm(username, email, password);
@@ -62,7 +58,6 @@ test.describe('User Registration', () => {
 
     // Get credentials of the auth user created in setup
     const authUser = getAuthCredentials();
-    console.log(`[${browserName}] Testing duplicate username validation with setup user: ${authUser.username}`);
 
     // Use the page object's navigate method which calls the correct URL structure
     await registerPage.navigate();
@@ -100,7 +95,6 @@ test.describe('User Registration', () => {
 
     // Get credentials of the auth user created in setup
     const authUser = getAuthCredentials();
-    console.log(`[${browserName}] Testing duplicate email validation with setup user email: ${authUser.email}`);
 
     // Use the page object's navigate method which calls the correct URL structure
     await registerPage.navigate();
@@ -135,8 +129,6 @@ test.describe('User Registration', () => {
 
   test('should enable sign-up button only with all fields filled', async ({ page, browserName, pageManager }) => {
     const registerPage = pageManager.registerPage;
-
-    console.log(`[${browserName}] Testing sign-up button activation`);
 
     await registerPage.navigate();
 

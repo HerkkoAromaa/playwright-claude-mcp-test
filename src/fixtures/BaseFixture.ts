@@ -111,8 +111,6 @@ export const test = testDataTest.extend<CombinedFixtures, { workerAuth: WorkerAu
   // Worker-scoped authentication - creates one user per worker
   workerAuth: [
     async ({ browser, testData }, use, workerInfo) => {
-      console.log(`Setting up worker-scoped authentication for worker ${workerInfo.workerIndex}`);
-
       // Create a unique storage path for this worker
       const workerAuthPath = path.join(AUTH_DIR, `worker-auth-${workerInfo.workerIndex}.json`);
       let context: BrowserContext;
@@ -121,8 +119,7 @@ export const test = testDataTest.extend<CombinedFixtures, { workerAuth: WorkerAu
 
       // Check if we have existing auth state for this worker
       if (fs.existsSync(workerAuthPath)) {
-        // Load existing auth state
-        console.log(`Using existing auth state for worker ${workerInfo.workerIndex}`);
+        // Load existing auth state without logging
         context = await browser.newContext({
           storageState: workerAuthPath,
         });
@@ -147,8 +144,7 @@ export const test = testDataTest.extend<CombinedFixtures, { workerAuth: WorkerAu
           };
         }
       } else {
-        // Create new user and save auth state
-        console.log(`Creating new user for worker ${workerInfo.workerIndex}`);
+        // Create new user and save auth state without logging
         context = await browser.newContext();
         const page = await context.newPage();
 
@@ -161,8 +157,6 @@ export const test = testDataTest.extend<CombinedFixtures, { workerAuth: WorkerAu
           email: testUser.email,
           password: testUser.password,
         };
-
-        console.log(`Registering user: ${testUser.username}`);
 
         // Get PageManager for this page
         const pageManager = PageManager.getInstance(page);

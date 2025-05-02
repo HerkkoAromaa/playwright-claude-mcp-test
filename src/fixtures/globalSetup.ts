@@ -29,8 +29,6 @@ async function globalSetup() {
     const baseUrl = process.env.BASE_URL || 'https://conduit.bondaracademy.com';
 
     try {
-      console.log('Starting test data cleanup...');
-
       // Create a temporary browser for authentication
       const browser = await chromium.launch();
       const context = await browser.newContext();
@@ -77,9 +75,6 @@ async function globalSetup() {
         const response = await apiClient.getArticlesByAuthor(username);
         const articles = response.articles || [];
 
-        // Log how many articles we found
-        console.log(`Found ${articles.length} article(s) to examine`);
-
         // Delete articles that match our test patterns
         let deletedCount = 0;
         for (const article of articles) {
@@ -94,29 +89,21 @@ async function globalSetup() {
             try {
               await apiClient.deleteArticle(article.slug);
               deletedCount++;
-              console.log(`Deleted article: ${article.title}`);
             } catch (error) {
-              console.error(
-                `Failed to delete article ${article.title}:`,
-                error
-              );
+              // Silently continue on error
             }
           }
         }
-
-        console.log(`Deleted ${deletedCount} test articles`);
       } catch (error) {
-        console.error('Error during article cleanup:', error);
+        // Silently continue on error
       }
 
       // Clean up by closing browser
       await browser.close();
     } catch (error) {
-      console.error('Error during test data cleanup:', error);
+      // Silently continue on error
     }
   }
-
-  console.log('Global setup complete - directories created');
 }
 
 export default globalSetup;
