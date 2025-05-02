@@ -15,7 +15,15 @@ export default defineConfig({
   /* Configure workers to use number of CPUs or environment variable */
   workers: process.env.CI ? 1 : process.env.WORKERS ? parseInt(process.env.WORKERS) : undefined,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
-  reporter: [['html', { outputFolder: 'playwright-report' }], ['list']],
+  reporter: [
+    ['html', { outputFolder: 'playwright-report' }], 
+    ['list'],
+    ['allure-playwright', {
+      detail: true,
+      outputFolder: 'allure-results',
+      suiteTitle: false
+    }]
+  ],
   /* Folder for test artifacts such as screenshots, videos, traces, etc. */
   outputDir: 'test-results/',
   /* Timeout settings */

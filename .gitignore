@@ -36,3 +36,7 @@ build/
 # Coverage reports
 coverage/
 .file-structure.txt
+
+# allure
+allure-report/
+allure-results/
