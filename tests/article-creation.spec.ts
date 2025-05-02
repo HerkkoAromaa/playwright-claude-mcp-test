@@ -5,9 +5,7 @@ import { PageManager } from '../src/manager/PageManager';
 
 // Use authenticatedPage for all tests that need authentication
 test.describe('Article Creation', () => {
-  test('should create a new article with authenticated user', async ({
-    authenticatedPage,
-  }) => {
+  test('should create a new article with authenticated user', async ({ authenticatedPage }) => {
     const { page, pageManager, credentials } = authenticatedPage;
     const editorPage = pageManager.editorPage;
 
@@ -35,24 +33,16 @@ test.describe('Article Creation', () => {
 
     // Verify all tags are displayed
     for (const tag of tags) {
-      const tagFound = await page.evaluate((tagText) => {
-        const tagElements = Array.from(
-          document.querySelectorAll('.tag-list li')
-        );
-        return tagElements.some(
-          (el) =>
-            el.textContent &&
-            el.textContent.trim().toLowerCase() === tagText.toLowerCase()
-        );
+      const tagFound = await page.evaluate(tagText => {
+        const tagElements = Array.from(document.querySelectorAll('.tag-list li'));
+        return tagElements.some(el => el.textContent && el.textContent.trim().toLowerCase() === tagText.toLowerCase());
       }, tag);
 
       expect(tagFound, `Tag "${tag}" should be visible`).toBeTruthy();
     }
   });
 
-  test('should require all mandatory fields for article creation', async ({
-    authenticatedPage,
-  }) => {
+  test('should require all mandatory fields for article creation', async ({ authenticatedPage }) => {
     const { page, pageManager } = authenticatedPage;
     const editorPage = pageManager.editorPage;
 
@@ -69,9 +59,7 @@ test.describe('Article Creation', () => {
     await expect(page.locator('.error-messages')).toBeVisible();
   });
 
-  test('should create article with multiple tags', async ({
-    authenticatedPage,
-  }) => {
+  test('should create article with multiple tags', async ({ authenticatedPage }) => {
     const { page, pageManager } = authenticatedPage;
     const editorPage = pageManager.editorPage;
 
@@ -96,24 +84,16 @@ test.describe('Article Creation', () => {
     await expect(page.locator('.tag-list li')).toHaveCount(tags.length);
 
     for (const tag of tags) {
-      const tagFound = await page.evaluate((tagText) => {
-        const tagElements = Array.from(
-          document.querySelectorAll('.tag-list li')
-        );
-        return tagElements.some(
-          (el) =>
-            el.textContent &&
-            el.textContent.trim().toLowerCase() === tagText.toLowerCase()
-        );
+      const tagFound = await page.evaluate(tagText => {
+        const tagElements = Array.from(document.querySelectorAll('.tag-list li'));
+        return tagElements.some(el => el.textContent && el.textContent.trim().toLowerCase() === tagText.toLowerCase());
       }, tag);
 
       expect(tagFound, `Tag "${tag}" should be visible`).toBeTruthy();
     }
   });
 
-  test('should allow editing an existing article', async ({
-    authenticatedPage,
-  }) => {
+  test('should allow editing an existing article', async ({ authenticatedPage }) => {
     const { page, pageManager } = authenticatedPage;
     const editorPage = pageManager.editorPage;
     const homePage = pageManager.homePage;
@@ -125,20 +105,14 @@ test.describe('Article Creation', () => {
     const originalContent = 'Original content';
 
     await editorPage.navigate();
-    await editorPage.fillArticleForm(
-      originalTitle,
-      originalDescription,
-      originalContent
-    );
+    await editorPage.fillArticleForm(originalTitle, originalDescription, originalContent);
     await editorPage.publishArticle();
 
     // Wait for the article to be published
     await page.waitForLoadState('networkidle');
 
     // Verify the article was published
-    await expect(
-      page.getByRole('heading', { name: originalTitle })
-    ).toBeVisible();
+    await expect(page.getByRole('heading', { name: originalTitle })).toBeVisible();
 
     // Edit the article
     await page
@@ -157,15 +131,10 @@ test.describe('Article Creation', () => {
 
     // Verify the update was successful
     await expect(page).toHaveURL(/.*\/article\/.+/);
-    await expect(
-      page.getByRole('heading', { name: updatedTitle })
-    ).toBeVisible();
+    await expect(page.getByRole('heading', { name: updatedTitle })).toBeVisible();
   });
 
-  test('should create article via API and verify in UI', async ({
-    authenticatedPage,
-    baseURL,
-  }) => {
+  test('should create article via API and verify in UI', async ({ authenticatedPage, baseURL }) => {
     const { page, pageManager, credentials } = authenticatedPage;
 
     // Create API client (which we'll keep for future use)
@@ -180,12 +149,7 @@ test.describe('Article Creation', () => {
 
       // Create article using the page manager & UI flow
       await pageManager.editorPage.navigate();
-      await pageManager.editorPage.fillArticleForm(
-        title,
-        description,
-        content,
-        tags
-      );
+      await pageManager.editorPage.fillArticleForm(title, description, content, tags);
       await pageManager.editorPage.publishArticle();
 
       // Wait for navigation to complete and the article page to fully load

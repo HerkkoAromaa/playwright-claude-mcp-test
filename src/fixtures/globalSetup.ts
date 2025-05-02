@@ -9,12 +9,7 @@ import { ApiClient } from '../utils/ApiClient';
  */
 async function globalSetup() {
   // Create necessary directories for test artifacts
-  const directories = [
-    '.auth',
-    'test-results',
-    'playwright-report',
-    'screenshots',
-  ];
+  const directories = ['.auth', 'test-results', 'playwright-report', 'screenshots'];
 
   for (const dir of directories) {
     const dirPath = path.join(process.cwd(), dir);
@@ -50,9 +45,7 @@ async function globalSetup() {
       await page.waitForURL(`${baseUrl}/`);
 
       // Get auth token for API operations
-      const authToken = await context
-        .cookies()
-        .then((cookies) => cookies.find((c) => c.name === 'token')?.value);
+      const authToken = await context.cookies().then(cookies => cookies.find(c => c.name === 'token')?.value);
 
       if (!authToken) {
         throw new Error('Failed to get authentication token');
@@ -64,11 +57,7 @@ async function globalSetup() {
 
       // Find articles created by our test users
       // This pattern is used to identify test articles
-      const testArticlePrefixes = [
-        'worker',
-        'testuser_',
-        'Getting Started with Automation',
-      ];
+      const testArticlePrefixes = ['worker', 'testuser_', 'Getting Started with Automation'];
 
       // Get user's feed to find test articles
       try {
@@ -80,9 +69,7 @@ async function globalSetup() {
         for (const article of articles) {
           // Check if this looks like a test article
           const isTestArticle = testArticlePrefixes.some(
-            (prefix) =>
-              article.title?.includes(prefix) ||
-              article.author?.username?.includes(prefix)
+            prefix => article.title?.includes(prefix) || article.author?.username?.includes(prefix)
           );
 
           if (isTestArticle && article.slug) {

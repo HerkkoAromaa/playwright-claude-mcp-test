@@ -78,10 +78,7 @@ export class TestDataManager {
   /**
    * Get the TestDataManager instance (creates one if it doesn't exist)
    */
-  public static getInstance(
-    baseUrl: string,
-    environment: TestEnvironment = 'dev'
-  ): TestDataManager {
+  public static getInstance(baseUrl: string, environment: TestEnvironment = 'dev'): TestDataManager {
     if (!TestDataManager.instance) {
       TestDataManager.instance = new TestDataManager(baseUrl, environment);
     }
@@ -141,11 +138,9 @@ export class TestDataManager {
     articleData?: Partial<TestArticle>
   ): Promise<TestArticle> {
     // Generate article data
-    const title =
-      articleData?.title || TestDataGenerator.generateArticleTitle();
+    const title = articleData?.title || TestDataGenerator.generateArticleTitle();
     const description = articleData?.description || `Description for ${title}`;
-    const body =
-      articleData?.body || TestDataGenerator.generateArticleContent();
+    const body = articleData?.body || TestDataGenerator.generateArticleContent();
     const tagList = articleData?.tagList || TestDataGenerator.generateTags();
 
     const article: TestArticle = {
@@ -163,12 +158,7 @@ export class TestDataManager {
       api.setAuthToken(author.token);
 
       try {
-        const response = await api.createArticle(
-          title,
-          description,
-          body,
-          tagList
-        );
+        const response = await api.createArticle(title, description, body, tagList);
         article.slug = response.article.slug;
         article.id = response.article.id;
       } catch (error) {
@@ -271,11 +261,7 @@ export class TestDataManager {
         comments: Array.from(this.comments.entries()),
         lastUpdated: new Date().toISOString(),
       };
-      fs.writeFileSync(
-        this.dataFilePath,
-        JSON.stringify(data, null, 2),
-        'utf-8'
-      );
+      fs.writeFileSync(this.dataFilePath, JSON.stringify(data, null, 2), 'utf-8');
     } catch (error) {
       // Silent error in release mode
     }

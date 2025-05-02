@@ -16,13 +16,16 @@ export default defineConfig({
   workers: process.env.CI ? 1 : process.env.WORKERS ? parseInt(process.env.WORKERS) : undefined,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: [
-    ['html', { outputFolder: 'playwright-report' }], 
+    ['html', { outputFolder: 'playwright-report' }],
     ['list'],
-    ['allure-playwright', {
-      detail: true,
-      outputFolder: 'allure-results',
-      suiteTitle: false
-    }]
+    [
+      'allure-playwright',
+      {
+        detail: true,
+        outputFolder: 'allure-results',
+        suiteTitle: false,
+      },
+    ],
   ],
   /* Folder for test artifacts such as screenshots, videos, traces, etc. */
   outputDir: 'test-results/',

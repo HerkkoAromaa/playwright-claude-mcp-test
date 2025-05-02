@@ -37,6 +37,7 @@ This enterprise-ready test framework automates testing of the Conduit applicatio
 ## Key Features
 
 - **🏗️ Architecture**
+
   - Page Object Model for clear separation of concerns
   - Type-safe implementation with TypeScript
   - Worker-scoped authentication for parallel test execution
@@ -44,6 +45,7 @@ This enterprise-ready test framework automates testing of the Conduit applicatio
   - Modular and extensible design
 
 - **🔄 Test Execution**
+
   - Parallel test execution across multiple workers
   - Cross-browser testing (Chromium, Firefox, WebKit)
   - Device emulation for mobile viewport testing
@@ -51,6 +53,7 @@ This enterprise-ready test framework automates testing of the Conduit applicatio
   - Granular test filtering options
 
 - **📊 Reporting**
+
   - Built-in Playwright HTML reports
   - Allure reporting with rich test analytics
   - Screenshot capture on test failure
@@ -58,12 +61,14 @@ This enterprise-ready test framework automates testing of the Conduit applicatio
   - Test history tracking
 
 - **🔐 Authentication**
+
   - Cached authentication states for fast test execution
   - Worker-specific authentication to prevent conflicts
   - API-based authentication shortcuts
   - Session state persistence between runs
 
 - **📝 Test Data**
+
   - Dynamic test data generation
   - Test data cleanup mechanisms
   - Data persistence for debugging
@@ -130,6 +135,7 @@ conduit-playwright-tests/
    ```
 
 3. Install browsers:
+
    ```bash
    npx playwright install
    ```
@@ -144,16 +150,19 @@ conduit-playwright-tests/
 ### Basic Test Commands
 
 Run all tests in headless mode:
+
 ```bash
 npx playwright test
 ```
 
 Run tests with UI mode:
+
 ```bash
 npx playwright test --ui
 ```
 
 Run tests in specific browser:
+
 ```bash
 npx playwright test --project=chromium
 npx playwright test --project=firefox
@@ -161,11 +170,13 @@ npx playwright test --project=webkit
 ```
 
 Run specific test file:
+
 ```bash
 npx playwright test tests/registration.spec.ts
 ```
 
 Run tests filtered by title:
+
 ```bash
 npx playwright test -g "should register a new user"
 ```
@@ -173,36 +184,43 @@ npx playwright test -g "should register a new user"
 ### Advanced Test Commands
 
 Run tests with headed browsers:
+
 ```bash
 npx playwright test --headed
 ```
 
 Run tests with debug mode:
+
 ```bash
 npx playwright test --debug
 ```
 
 Run tests with specific concurrency:
+
 ```bash
 npx playwright test --workers=4
 ```
 
 Run tests with trace recording:
+
 ```bash
 npx playwright test --trace=on
 ```
 
 Run tests with video recording:
+
 ```bash
 npx playwright test --video=on
 ```
 
 Run tests using the shell script with common options:
+
 ```bash
 ./run-playwright-tests.sh --browser=chromium --headless --retries=2
 ```
 
 The shell script supports these options:
+
 - `--browser`: chromium, firefox, webkit, or all (default: all)
 - `--headless`: true or false (default: true)
 - `--retries`: number of retries for failed tests (default: 1)
@@ -213,17 +231,18 @@ The shell script supports these options:
 
 The framework supports these environment variables:
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| BASE_URL | Base URL for the application | https://conduit.bondaracademy.com |
-| TIMEOUT | Default timeout in milliseconds | 30000 |
-| RETRY_COUNT | Number of retries for failed tests | 1 |
-| BROWSER | Browser to use for tests | chromium |
-| CLEANUP_TEST_DATA | Whether to clean up test data | false |
-| DEBUG_LOGS | Enable verbose debug logging | false |
-| TEST_ENV | Test environment (dev/staging/prod) | dev |
+| Variable          | Description                         | Default                           |
+| ----------------- | ----------------------------------- | --------------------------------- |
+| BASE_URL          | Base URL for the application        | https://conduit.bondaracademy.com |
+| TIMEOUT           | Default timeout in milliseconds     | 30000                             |
+| RETRY_COUNT       | Number of retries for failed tests  | 1                                 |
+| BROWSER           | Browser to use for tests            | chromium                          |
+| CLEANUP_TEST_DATA | Whether to clean up test data       | false                             |
+| DEBUG_LOGS        | Enable verbose debug logging        | false                             |
+| TEST_ENV          | Test environment (dev/staging/prod) | dev                               |
 
 Example:
+
 ```bash
 BASE_URL=https://staging.conduit.com BROWSER=firefox npx playwright test
 ```
@@ -237,6 +256,7 @@ DEBUG_LOGS=true npx playwright test
 ```
 
 For minimal logging output, run tests with the quiet option:
+
 ```bash
 npx playwright test --quiet
 ```
@@ -252,6 +272,7 @@ npx playwright show-report
 ```
 
 This will open the HTML report in your default browser, showing:
+
 - Test results summary
 - Test execution timeline
 - Screenshots of test failures
@@ -259,6 +280,7 @@ This will open the HTML report in your default browser, showing:
 - Trace viewer for debugging
 
 Example output:
+
 ```
 Running 25 tests using 5 workers
   ✓ registration.spec.ts:18:3 › should register a new user (1.2s)
@@ -271,6 +293,7 @@ Running 25 tests using 5 workers
 This framework provides comprehensive Allure reporting for advanced test analytics:
 
 Generate and view the Allure report:
+
 ```bash
 # Generate Allure report from results
 npx allure generate allure-results --clean
@@ -280,6 +303,7 @@ npx allure serve allure-results
 ```
 
 The Allure report provides:
+
 - Test execution statistics and trends
 - Environment information
 - Test case duration breakdown
@@ -404,10 +428,7 @@ The framework provides several custom fixtures to enhance test reliability:
 
 ```typescript
 // Example test using fixtures
-test('should create article with authenticated user', async ({
-  authenticatedPage,
-  baseURL,
-}) => {
+test('should create article with authenticated user', async ({ authenticatedPage, baseURL }) => {
   const { page, pageManager, credentials } = authenticatedPage;
   // Test code
 });
@@ -435,12 +456,14 @@ node split-tests.js
 ```
 
 This creates individual test files in subdirectories:
+
 - `tests/registration/` - Split registration tests
 - `tests/articles/` - Split article tests
 
 ### Test Data Manager
 
 The `TestDataManager` class provides utilities for:
+
 - Creating test users
 - Creating test articles
 - Managing test data
@@ -458,16 +481,19 @@ const article = await manager.createArticle(user, true);
 The framework follows these best practices:
 
 ### KISS (Keep It Simple, Stupid)
+
 - Clean, readable test code
 - Minimal logging in release mode
 - Single responsibility for each component
 
 ### DRY (Don't Repeat Yourself)
+
 - Shared fixtures for common functionality
 - Page Object Model for UI interactions
 - Helper utilities for common tasks
 
 ### SOLID Principles
+
 - Single Responsibility: Each class has one job
 - Open/Closed: Framework can be extended without modification
 - Liskov Substitution: Page interfaces can be substituted
@@ -479,13 +505,17 @@ The framework follows these best practices:
 The framework is designed to run in CI environments with these features:
 
 ### Parallel Execution
+
 Configure the number of parallel workers:
+
 ```bash
 npx playwright test --workers=4
 ```
 
 ### Reports Integration
+
 Generate both Playwright and Allure reports:
+
 ```bash
 # Add to your CI script
 npx playwright test --reporter=list,allure-playwright
@@ -493,13 +523,17 @@ npx allure generate allure-results --clean
 ```
 
 ### Retry Logic
+
 Configure retries for flaky tests:
+
 ```bash
 npx playwright test --retries=2
 ```
 
 ### CI Example
+
 GitHub Actions example:
+
 ```yaml
 jobs:
   test:
@@ -530,20 +564,24 @@ jobs:
 ### Common Issues
 
 **Authentication Issues**
+
 - Delete the `.auth` directory to reset authentication state
 - Check if the application API endpoints have changed
 
 **Test Data Issues**
+
 - Clear the `.test-data` directory to reset test data
 - Check if the application has been reset or data cleaned up
 
 **Reporting Issues**
+
 - Ensure Java is installed for Allure reporting
 - Clear the `allure-results` directory for fresh reports
 
 ### Debug Mode
 
 Run tests in debug mode to diagnose issues:
+
 ```bash
 DEBUG_LOGS=true npx playwright test --debug
 ```
@@ -551,15 +589,18 @@ DEBUG_LOGS=true npx playwright test --debug
 ### Trace Viewer
 
 Use trace viewer to analyze test execution:
+
 ```bash
 npx playwright test --trace=on
 npx playwright show-report
 ```
+
 Then click on the trace icon for any test to open the trace viewer.
 
 ### Manual Browser Launch
 
 For direct debugging:
+
 ```bash
 npx playwright open https://conduit.bondaracademy.com
 ```

@@ -31,10 +31,7 @@ export type TestDataState = {
   // Methods to create test data
   createUser(): Promise<TestUser>;
   registerAndLoginUser(user?: Partial<TestUser>): Promise<TestUser>;
-  createArticle(
-    author?: TestUser,
-    options?: Partial<TestArticle>
-  ): Promise<TestArticle>;
+  createArticle(author?: TestUser, options?: Partial<TestArticle>): Promise<TestArticle>;
 };
 
 // Default API URL if not provided
@@ -82,16 +79,12 @@ export const test = baseTest.extend<
         },
 
         // Register and log in a user via API
-        async registerAndLoginUser(
-          userPartial?: Partial<TestUser>
-        ): Promise<TestUser> {
+        async registerAndLoginUser(userPartial?: Partial<TestUser>): Promise<TestUser> {
           // Create a new user or use the provided partial info
           const user: TestUser = {
-            username:
-              userPartial?.username || TestDataGenerator.generateUsername(),
+            username: userPartial?.username || TestDataGenerator.generateUsername(),
             email: userPartial?.email || TestDataGenerator.generateEmail(),
-            password:
-              userPartial?.password || TestDataGenerator.generatePassword(),
+            password: userPartial?.password || TestDataGenerator.generatePassword(),
           };
 
           try {
@@ -108,10 +101,7 @@ export const test = baseTest.extend<
         },
 
         // Create an article via API or just generate data
-        async createArticle(
-          author?: TestUser,
-          options?: Partial<TestArticle>
-        ): Promise<TestArticle> {
+        async createArticle(author?: TestUser, options?: Partial<TestArticle>): Promise<TestArticle> {
           const article: TestArticle = {
             title: options?.title || TestDataGenerator.generateArticleTitle(),
             description: options?.description || `Description for test article`,
@@ -152,7 +142,7 @@ export const test = baseTest.extend<
           if (article.slug) {
             try {
               // Find a user with a token to delete the article
-              const authorToken = users.find((u) => u.token)?.token;
+              const authorToken = users.find(u => u.token)?.token;
               if (authorToken) {
                 apiClient.setAuthToken(authorToken);
                 await apiClient.deleteArticle(article.slug);

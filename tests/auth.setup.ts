@@ -40,9 +40,5 @@ setup('authenticate', async ({ page }) => {
   await page.context().storageState({ path: authFile });
 
   // Save credentials to a companion file for reference
-  fs.writeFileSync(
-    path.join(authDir, 'credentials.json'),
-    JSON.stringify({ username, email, password }),
-    'utf8'
-  );
+  fs.writeFileSync(path.join(authDir, 'credentials.json'), JSON.stringify({ username, email, password }), 'utf8');
 });
