@@ -30,15 +30,11 @@ const test = baseTest.extend({
 });
 
 test.describe('User Registration', () => {
-  test('should register a new user with valid credentials', async ({
-    page,
-    browserName,
-    pageManager,
-  }) => {
+  test('should register a new user with valid credentials', async ({ page, browserName, pageManager }) => {
     const registerPage = pageManager.registerPage;
 
-    // Use our shared credentials for the first successful registration
-    const username = `testuser_${Date.now()}`;
+    // Use TestDataGenerator for all credentials to ensure consistent format
+    const username = TestDataGenerator.generateUsername();
     const email = TestDataGenerator.generateEmail(username);
     const password = TestDataGenerator.generatePassword();
 
@@ -61,18 +57,12 @@ test.describe('User Registration', () => {
     await expect(page.getByText(username, { exact: false })).toBeVisible();
   });
 
-  test('should show validation error for existing username', async ({
-    page,
-    browserName,
-    pageManager,
-  }) => {
+  test('should show validation error for existing username', async ({ page, browserName, pageManager }) => {
     const registerPage = pageManager.registerPage;
 
     // Get credentials of the auth user created in setup
     const authUser = getAuthCredentials();
-    console.log(
-      `[${browserName}] Testing duplicate username validation with setup user: ${authUser.username}`
-    );
+    console.log(`[${browserName}] Testing duplicate username validation with setup user: ${authUser.username}`);
 
     // Use the page object's navigate method which calls the correct URL structure
     await registerPage.navigate();
@@ -87,11 +77,7 @@ test.describe('User Registration', () => {
 
     // Try to register another user with the same username but different email
     const newEmail = TestDataGenerator.generateEmail(`new_${browserName}`);
-    await registerPage.fillRegistrationForm(
-      authUser.username,
-      newEmail,
-      authUser.password
-    );
+    await registerPage.fillRegistrationForm(authUser.username, newEmail, authUser.password);
     await registerPage.submitForm();
 
     // Wait for error response
@@ -109,18 +95,12 @@ test.describe('User Registration', () => {
     expect(errorText.toLowerCase()).toContain('username');
   });
 
-  test('should show validation error for existing email', async ({
-    page,
-    browserName,
-    pageManager,
-  }) => {
+  test('should show validation error for existing email', async ({ page, browserName, pageManager }) => {
     const registerPage = pageManager.registerPage;
 
     // Get credentials of the auth user created in setup
     const authUser = getAuthCredentials();
-    console.log(
-      `[${browserName}] Testing duplicate email validation with setup user email: ${authUser.email}`
-    );
+    console.log(`[${browserName}] Testing duplicate email validation with setup user email: ${authUser.email}`);
 
     // Use the page object's navigate method which calls the correct URL structure
     await registerPage.navigate();
@@ -134,12 +114,8 @@ test.describe('User Registration', () => {
     });
 
     // Try to register another user with the same email but different username
-    const newUsername = `new_${authUser.username}_${browserName}`;
-    await registerPage.fillRegistrationForm(
-      newUsername,
-      authUser.email,
-      authUser.password
-    );
+    const newUsername = TestDataGenerator.generateUsername();
+    await registerPage.fillRegistrationForm(newUsername, authUser.email, authUser.password);
     await registerPage.submitForm();
 
     // Wait for error response
@@ -157,11 +133,7 @@ test.describe('User Registration', () => {
     expect(errorText.toLowerCase()).toContain('email');
   });
 
-  test('should enable sign-up button only with all fields filled', async ({
-    page,
-    browserName,
-    pageManager,
-  }) => {
+  test('should enable sign-up button only with all fields filled', async ({ page, browserName, pageManager }) => {
     const registerPage = pageManager.registerPage;
 
     console.log(`[${browserName}] Testing sign-up button activation`);
@@ -171,16 +143,12 @@ test.describe('User Registration', () => {
     // Initially, button should be disabled (no fields filled)
     expect(await registerPage.isSignUpButtonEnabled()).toBeFalsy();
 
-    // Fill username only
-    await registerPage.usernameInput.fill(
-      `${TestDataGenerator.generateUsername()}_${browserName}`
-    );
+    // Fill username only - use generator without adding browser name to avoid making it too long
+    await registerPage.usernameInput.fill(TestDataGenerator.generateUsername());
     expect(await registerPage.isSignUpButtonEnabled()).toBeFalsy();
 
-    // Fill email too
-    await registerPage.emailInput.fill(
-      TestDataGenerator.generateEmail(browserName)
-    );
+    // Fill email too - use generator directly
+    await registerPage.emailInput.fill(TestDataGenerator.generateEmail());
     expect(await registerPage.isSignUpButtonEnabled()).toBeFalsy();
 
     // Fill password too (all fields filled)

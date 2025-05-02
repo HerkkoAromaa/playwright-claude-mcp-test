@@ -3,49 +3,51 @@
  */
 export class TestDataGenerator {
   /**
-   * Generate a random username with a timestamp to ensure uniqueness
-   * @returns Random username string
+   * Generate a random username with a short random suffix to ensure uniqueness
+   * @returns Random username string with format testuser_XXXXXX where X is alphanumeric
    */
   static generateUsername(): string {
     const prefix = 'testuser';
-    const timestamp = new Date().toISOString().replace(/[-:T.]/g, '');
-    return `${prefix}_${timestamp}`;
+    const suffix = this.generateRandomString(6);
+    return `${prefix}_${suffix}`;
   }
 
   /**
-   * Generate a random email address with a timestamp to ensure uniqueness
+   * Generate a random email address with same suffix as username to ensure uniqueness
+   * @param prefix Optional prefix (defaults to testuser)
    * @param domain Optional domain name (defaults to example.com)
-   * @returns Random email string
+   * @returns Random email string with format testuser_XXXXXX@example.com
    */
-  static generateEmail(domain: string = 'example.com'): string {
-    const prefix = 'testuser';
-    const timestamp = new Date().toISOString().replace(/[-:T.]/g, '');
-    return `${prefix}_${timestamp}@${domain}`;
+  static generateEmail(prefix: string = 'testuser', domain: string = 'example.com'): string {
+    // Extract the random suffix if the prefix contains it (from generateUsername)
+    const suffixMatch = prefix.match(/testuser_([a-zA-Z0-9]{6})$/);
+    const suffix = suffixMatch ? suffixMatch[1] : this.generateRandomString(6);
+
+    return `testuser_${suffix}@${domain}`;
   }
 
   /**
-   * Generate a random password that meets common requirements
-   * @returns Random password string
+   * Generate a standard password as requested
+   * @returns Standard password string
    */
   static generatePassword(): string {
-    const length = Math.floor(Math.random() * 5) + 10; // 10-14 characters
-    const chars =
-      'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
-    let password = '';
+    return 'password123';
+  }
 
-    // Ensure password has at least one uppercase, lowercase, number, and special char
-    password += 'Aa1!';
+  /**
+   * Helper method to generate random alphanumeric string of specified length
+   * @param length Length of random string to generate
+   * @returns Random alphanumeric string
+   */
+  private static generateRandomString(length: number): string {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    let result = '';
 
-    // Fill the rest with random characters
-    for (let i = 4; i < length; i++) {
-      password += chars.charAt(Math.floor(Math.random() * chars.length));
+    for (let i = 0; i < length; i++) {
+      result += chars.charAt(Math.floor(Math.random() * chars.length));
     }
 
-    // Shuffle the password characters
-    return password
-      .split('')
-      .sort(() => 0.5 - Math.random())
-      .join('');
+    return result;
   }
 
   /**

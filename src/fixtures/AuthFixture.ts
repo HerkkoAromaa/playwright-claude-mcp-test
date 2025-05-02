@@ -114,10 +114,10 @@ export const test = base.extend<AuthFixtures>({
       // Create new user and save auth state
       const page = await context.newPage();
 
-      // Generate credentials
-      const username = `shareduser_${Date.now()}`;
-      const email = `shareduser_${Date.now()}@example.com`;
-      const password = 'Password123!';
+      // Generate credentials using TestDataGenerator to ensure consistent format
+      const username = TestDataGenerator.generateUsername();
+      const email = TestDataGenerator.generateEmail(username);
+      const password = TestDataGenerator.generatePassword();
       credentials = { username, email, password };
 
       // Register and log in
@@ -131,11 +131,7 @@ export const test = base.extend<AuthFixtures>({
       await context.storageState({ path: SHARED_AUTH_STATE_PATH });
 
       // Save credentials to a companion file
-      fs.writeFileSync(
-        SHARED_AUTH_STATE_PATH.replace('.json', '-creds.json'),
-        JSON.stringify(credentials),
-        'utf-8'
-      );
+      fs.writeFileSync(SHARED_AUTH_STATE_PATH.replace('.json', '-creds.json'), JSON.stringify(credentials), 'utf-8');
 
       await page.close();
     }

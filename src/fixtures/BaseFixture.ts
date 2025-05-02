@@ -5,11 +5,7 @@ import { RegisterPage, IRegisterPage } from '../pages/RegisterPage';
 import { EditorPage, IEditorPage } from '../pages/EditorPage';
 import { TestDataGenerator } from '../utils/TestDataGenerator';
 import { PageManager } from '../manager/PageManager';
-import {
-  test as testDataTest,
-  TestDataState,
-  TestUser,
-} from './TestDataFixture';
+import { test as testDataTest, TestDataState, TestUser } from './TestDataFixture';
 import path from 'path';
 import fs from 'fs';
 
@@ -92,10 +88,7 @@ type CombinedFixtures = PageObjects &
 /**
  * Export the extended test with combined fixtures
  */
-export const test = testDataTest.extend<
-  CombinedFixtures,
-  { workerAuth: WorkerAuthState }
->({
+export const test = testDataTest.extend<CombinedFixtures, { workerAuth: WorkerAuthState }>({
   // Page manager fixture - provides centralized access to all page objects
   pageManager: async ({ page }, use) => {
     await use(PageManager.getInstance(page));
@@ -118,15 +111,10 @@ export const test = testDataTest.extend<
   // Worker-scoped authentication - creates one user per worker
   workerAuth: [
     async ({ browser, testData }, use, workerInfo) => {
-      console.log(
-        `Setting up worker-scoped authentication for worker ${workerInfo.workerIndex}`
-      );
+      console.log(`Setting up worker-scoped authentication for worker ${workerInfo.workerIndex}`);
 
       // Create a unique storage path for this worker
-      const workerAuthPath = path.join(
-        AUTH_DIR,
-        `worker-auth-${workerInfo.workerIndex}.json`
-      );
+      const workerAuthPath = path.join(AUTH_DIR, `worker-auth-${workerInfo.workerIndex}.json`);
       let context: BrowserContext;
       let credentials: UserCredentials;
       let testUser: TestUser | undefined;
@@ -134,9 +122,7 @@ export const test = testDataTest.extend<
       // Check if we have existing auth state for this worker
       if (fs.existsSync(workerAuthPath)) {
         // Load existing auth state
-        console.log(
-          `Using existing auth state for worker ${workerInfo.workerIndex}`
-        );
+        console.log(`Using existing auth state for worker ${workerInfo.workerIndex}`);
         context = await browser.newContext({
           storageState: workerAuthPath,
         });
@@ -169,11 +155,7 @@ export const test = testDataTest.extend<
         // Create a user using our test data fixture instead of directly
         testUser = await testData.createUser();
 
-        // Add worker index to make username recognizable
-        testUser.username = `worker${workerInfo.workerIndex}_${testUser.username}`;
-        testUser.email = `worker${workerInfo.workerIndex}_${testUser.email}`;
-
-        // Extract the credentials for use with Playwright
+        // Extract the credentials for use with Playwright - don't modify username to avoid length issues
         credentials = {
           username: testUser.username,
           email: testUser.email,
@@ -186,11 +168,7 @@ export const test = testDataTest.extend<
         const pageManager = PageManager.getInstance(page);
 
         // Register and log in with the new user
-        await pageManager.registerPage.registerUser(
-          credentials.username,
-          credentials.email,
-          credentials.password
-        );
+        await pageManager.registerPage.registerUser(credentials.username, credentials.email, credentials.password);
 
         // Wait for authentication to complete
         await page.waitForTimeout(1000);
@@ -199,11 +177,7 @@ export const test = testDataTest.extend<
         await context.storageState({ path: workerAuthPath });
 
         // Save credentials to a companion file
-        fs.writeFileSync(
-          workerAuthPath.replace('.json', '-creds.json'),
-          JSON.stringify(credentials),
-          'utf-8'
-        );
+        fs.writeFileSync(workerAuthPath.replace('.json', '-creds.json'), JSON.stringify(credentials), 'utf-8');
 
         await page.close();
       }
@@ -274,10 +248,7 @@ export const test = testDataTest.extend<
       // Create a user with testData fixture
       testUser = await testData.createUser();
 
-      // Make the username indicate this is a shared user
-      testUser.username = `shareduser_${testUser.username}`;
-      testUser.email = `shareduser_${testUser.email}`;
-
+      // Use the testUser credentials directly without adding prefixes to avoid making username too long
       credentials = {
         username: testUser.username,
         email: testUser.email,
@@ -288,11 +259,7 @@ export const test = testDataTest.extend<
       const pageManager = PageManager.getInstance(page);
 
       // Register and log in with the new user
-      await pageManager.registerPage.registerUser(
-        credentials.username,
-        credentials.email,
-        credentials.password
-      );
+      await pageManager.registerPage.registerUser(credentials.username, credentials.email, credentials.password);
 
       // Wait for authentication to complete
       await page.waitForTimeout(1000);
@@ -301,11 +268,7 @@ export const test = testDataTest.extend<
       await context.storageState({ path: SHARED_AUTH_STATE_PATH });
 
       // Save credentials to a companion file
-      fs.writeFileSync(
-        SHARED_AUTH_STATE_PATH.replace('.json', '-creds.json'),
-        JSON.stringify(credentials),
-        'utf-8'
-      );
+      fs.writeFileSync(SHARED_AUTH_STATE_PATH.replace('.json', '-creds.json'), JSON.stringify(credentials), 'utf-8');
 
       await page.close();
     }
