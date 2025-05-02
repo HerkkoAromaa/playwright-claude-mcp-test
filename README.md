@@ -302,6 +302,61 @@ npx allure generate allure-results --clean
 npx allure serve allure-results
 ```
 
+#### Running Tests with Allure Reporting
+
+To run tests and automatically generate an Allure report in one command:
+
+```bash
+# Run tests and generate Allure report
+npx playwright test && npx allure generate allure-results --clean && npx allure open allure-report
+```
+
+Or use these individual steps:
+
+```bash
+# Step 1: Run the tests (Allure results are automatically created)
+npx playwright test
+
+# Step 2: Generate the HTML report from results
+npx allure generate allure-results --clean
+
+# Step 3: Open the report in your default browser
+npx allure open allure-report
+```
+
+For CI environments, you can use:
+
+```bash
+# Run tests with explicit Allure reporter configuration
+npx playwright test --reporter=list,allure-playwright
+```
+
+#### Managing Allure Results Between Test Runs
+
+⚠️ **Important:** Allure results accumulate between test runs, which can lead to misleading reports. For example, running only chromium tests might show results from previous firefox or webkit runs.
+
+To ensure your report only shows results from the current test run, clear the allure-results directory before running tests:
+
+```bash
+# Clear previous results before running tests
+rm -rf allure-results/* && npx playwright test --project=chromium
+
+# Then generate the report
+npx allure generate allure-results --clean && npx allure open allure-report
+```
+
+For macOS/Linux users, you can use this all-in-one command:
+
+```bash
+rm -rf allure-results/* && npx playwright test --project=chromium && npx allure generate allure-results --clean && npx allure open allure-report
+```
+
+For Windows users:
+
+```bash
+rmdir /s /q allure-results && mkdir allure-results && npx playwright test --project=chromium && npx allure generate allure-results --clean && npx allure open allure-report
+```
+
 The Allure report provides:
 
 - Test execution statistics and trends
@@ -597,73 +652,55 @@ npx playwright show-report
 
 Then click on the trace icon for any test to open the trace viewer.
 
-### Opening Traces with Context7 and Playwright MCP
+### Using Playwright Trace Viewer
 
-This project supports viewing traces using both Context7 and Playwright Model-Context Protocol (MCP) servers for enhanced debugging experience.
+Playwright provides a powerful trace viewer that helps with debugging test failures by capturing detailed execution information.
 
-#### Using Context7
+#### Opening Traces from HTML Reports
 
-[Context7](https://context7.io/) is a powerful trace viewer that extends Playwright's trace capabilities:
+The easiest way to view traces is directly from the HTML report:
 
-1. Install Context7 (if not already installed):
-
-   ```bash
-   npm install -g @context7/cli
-   ```
-
-2. Start the Context7 server:
+1. Generate an HTML report with traces:
 
    ```bash
-   context7 serve
+   npx playwright test --trace=on
    ```
 
-3. Open traces from the HTML report:
-
-   - Navigate to `playwright-report/index.html` in your browser
-   - Click on any test with a trace available
-   - Click "View trace in Context7" button (automatically connects to your locally running Context7 server)
-
-4. Alternatively, open traces directly in Context7:
+2. Open the HTML report:
 
    ```bash
-   context7 open test-results/my-test/trace.zip
+   npx playwright show-report
    ```
 
-5. Context7 features for trace analysis:
-   - Advanced timeline visualization
-   - Network activity correlation
-   - DOM snapshots with full interactivity
-   - Console and error message integration
-   - Memory and performance profiling
+3. Navigate to a test in the report and click on the "Trace" button (chain icon) to open the trace viewer.
 
-#### Using Playwright MCP Server
+#### Opening Downloaded Trace Files
 
-Playwright's Model-Context Protocol server provides a standard way to view traces:
+You can also download trace files (.zip) from the HTML report and view them later:
 
-1. Start the Playwright MCP server:
+1. From the HTML report, click the download icon next to the trace you want to save.
+
+2. Open the downloaded trace file using Playwright's trace viewer command:
 
    ```bash
-   npx playwright show-trace
+   npx playwright show-trace path/to/trace.zip
    ```
 
-2. View traces through the HTML report:
-
-   - Navigate to `playwright-report/index.html` in your browser
-   - Click on any test with a trace
-   - The trace viewer will open using the local MCP server
-
-3. Open specific trace files:
-
+3. For example, to open a trace from the test-results folder:
    ```bash
    npx playwright show-trace test-results/my-test/trace.zip
    ```
 
-4. Key features of Playwright trace viewer:
-   - Step-by-step action replay
-   - Screenshots at each step
-   - Console log integration
-   - Network request inspection
-   - Source location for each action
+#### Trace Viewer Features
+
+Playwright's trace viewer offers several powerful features:
+
+- **Timeline View**: Visualize actions, events, and screenshots along a timeline.
+- **Snapshots**: View DOM snapshots at each action point.
+- **Network**: Inspect network requests made during test execution.
+- **Console**: View console logs that occurred during the test.
+- **Source**: See the test source code that triggered each action.
+- **Errors**: Quickly identify and analyze errors that occurred during the test.
 
 #### Configuring Trace Options
 
@@ -679,7 +716,7 @@ To enable traces for all test runs:
 npx playwright test --trace=on
 ```
 
-For more detailed traces with screenshots:
+For more detailed traces with screenshots and snapshots:
 
 ```bash
 npx playwright test --trace=on --trace-screenshots=on
