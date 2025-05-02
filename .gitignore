@@ -34,3 +34,4 @@ build/
 
 # Coverage reports
 coverage/
+.file-structure.txt

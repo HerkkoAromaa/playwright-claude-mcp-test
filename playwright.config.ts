@@ -7,13 +7,13 @@ import path from 'path';
 export default defineConfig({
   testDir: './tests',
   /* Run tests in files in parallel */
-  fullyParallel: false,
+  fullyParallel: true,
   /* Fail the build on CI if you accidentally left test.only in the source code. */
   forbidOnly: !!process.env.CI,
   /* Make retries optional via command line argument */
   retries: process.env.RETRIES ? parseInt(process.env.RETRIES) : 1,
-  /* Default worker configuration - use CPU count or 1 for CI */
-  workers: process.env.CI ? 1 : undefined,
+  /* Configure workers to use number of CPUs or environment variable */
+  workers: process.env.CI ? 1 : process.env.WORKERS ? parseInt(process.env.WORKERS) : undefined,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: [['html', { outputFolder: 'playwright-report' }], ['list']],
   /* Folder for test artifacts such as screenshots, videos, traces, etc. */
@@ -66,7 +66,7 @@ export default defineConfig({
  * Helper function to generate browser projects with consistent configuration
  */
 function generateBrowserProjects(browserConfigs) {
-  return browserConfigs.map((config) => ({
+  return browserConfigs.map(config => ({
     name: config.label || config.name,
     use: {
       ...devices[config.device],
