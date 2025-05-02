@@ -3,6 +3,7 @@
 # Default behavior: empty the logs folder
 PRESERVE_LOGS=false
 GENERATE_ALLURE=true
+HISTORY_DIR="allure-history"
 
 # Parse command line arguments
 PLAYWRIGHT_ARGS=()
@@ -29,6 +30,22 @@ fi
 if [ "$GENERATE_ALLURE" = true ]; then
   echo "Preparing Allure results directory..."
   mkdir -p allure-results
+  
+  # Create history directory if it doesn't exist
+  mkdir -p "$HISTORY_DIR"
+  
+  # If there's an existing report, copy its history to preserve it
+  if [ -d "allure-report/history" ]; then
+    echo "Preserving previous test history..."
+    cp -r allure-report/history/* "$HISTORY_DIR/"
+  fi
+  
+  # Copy history to allure-results to be included in the new report
+  if [ -d "$HISTORY_DIR" ] && [ "$(ls -A "$HISTORY_DIR")" ]; then
+    echo "Adding test history to results..."
+    mkdir -p allure-results/history
+    cp -r "$HISTORY_DIR"/* allure-results/history/
+  fi
 fi
 
 # Generate timestamp for log file
@@ -45,6 +62,11 @@ TEST_EXIT_CODE=${PIPESTATUS[0]}
 if [ "$GENERATE_ALLURE" = true ]; then
   echo "Generating Allure report..."
   npx allure generate allure-results --clean -o allure-report
+  
+  # Preserve the history from the current run for future runs
+  echo "Saving test history for future runs..."
+  mkdir -p "$HISTORY_DIR"
+  cp -r allure-report/history/* "$HISTORY_DIR/"
   
   # Ask user if they want to serve the report
   echo ""
