@@ -606,21 +606,25 @@ This project supports viewing traces using both Context7 and Playwright Model-Co
 [Context7](https://context7.io/) is a powerful trace viewer that extends Playwright's trace capabilities:
 
 1. Install Context7 (if not already installed):
+
    ```bash
    npm install -g @context7/cli
    ```
 
 2. Start the Context7 server:
+
    ```bash
    context7 serve
    ```
 
 3. Open traces from the HTML report:
+
    - Navigate to `playwright-report/index.html` in your browser
    - Click on any test with a trace available
    - Click "View trace in Context7" button (automatically connects to your locally running Context7 server)
 
 4. Alternatively, open traces directly in Context7:
+
    ```bash
    context7 open test-results/my-test/trace.zip
    ```
@@ -637,16 +641,19 @@ This project supports viewing traces using both Context7 and Playwright Model-Co
 Playwright's Model-Context Protocol server provides a standard way to view traces:
 
 1. Start the Playwright MCP server:
+
    ```bash
    npx playwright show-trace
    ```
 
 2. View traces through the HTML report:
+
    - Navigate to `playwright-report/index.html` in your browser
    - Click on any test with a trace
    - The trace viewer will open using the local MCP server
 
 3. Open specific trace files:
+
    ```bash
    npx playwright show-trace test-results/my-test/trace.zip
    ```
@@ -661,16 +668,19 @@ Playwright's Model-Context Protocol server provides a standard way to view trace
 #### Configuring Trace Options
 
 The project's `playwright.config.ts` configures trace recording with:
+
 ```typescript
-trace: 'on-first-retry'  // Options: 'on', 'off', 'on-first-retry', 'retain-on-failure'
+trace: 'on-first-retry'; // Options: 'on', 'off', 'on-first-retry', 'retain-on-failure'
 ```
 
 To enable traces for all test runs:
+
 ```bash
 npx playwright test --trace=on
 ```
 
 For more detailed traces with screenshots:
+
 ```bash
 npx playwright test --trace=on --trace-screenshots=on
 ```
