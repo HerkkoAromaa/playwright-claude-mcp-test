@@ -3,7 +3,13 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
-  "scripts": {},
+  "scripts": {
+    "test": "node run-tests.js",
+    "test:chrome": "node run-tests.js test --project=chromium",
+    "test:firefox": "node run-tests.js test --project=firefox",
+    "test:webkit": "node run-tests.js test --project=webkit",
+    "test:mobile": "node run-tests.js test --project='Mobile Chrome'"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",

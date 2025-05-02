@@ -8,6 +8,7 @@ playwright-report/
 playwright/.cache/
 storage-state.json
 screenshots/
+test-logs/
 
 # Environment variables
 .env
